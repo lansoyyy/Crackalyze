@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:crackalyze/screens/safety_levels_screen.dart';
+import 'package:crackalyze/screens/history_screen.dart';
+import 'package:crackalyze/screens/terms_screen.dart';
+import 'package:crackalyze/screens/contact_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -10,31 +14,51 @@ class HomeScreen extends StatelessWidget {
         'name': 'Horizontal',
         'desc': 'Often from lateral pressure or foundation movement.',
         'icon': Icons.horizontal_rule,
+        'details': 'Horizontal cracks often result from lateral pressure (soil or water) or foundation movement. '
+            'They can indicate wall bowing. Monitor width, water ingress, and misaligned doors or windows; '
+            'consult a professional if the crack widens or structural movement is suspected.',
       },
       {
         'name': 'Vertical',
         'desc': 'Typically from settlement or thermal movement.',
         'icon': Icons.height,
+        'details':
+            'Vertical cracks typically form due to settlement or thermal movement. '
+                'They are often less serious, but wide or uneven openings may signal differential settlement '
+                'and should be evaluated by a professional.',
       },
       {
         'name': 'Diagonal',
         'desc': 'Shear or settlement near openings/corners.',
         'icon': Icons.call_split,
+        'details':
+            'Diagonal cracks near openings and corners often indicate shear stress or differential settlement. '
+                'Evaluate direction, width, and any displacement across the crack. '
+                'Progression over time can suggest foundation movement.',
       },
       {
         'name': 'Stair-step',
         'desc': 'Follows masonry joints in block/brick walls.',
         'icon': Icons.grid_on,
+        'details':
+            'Stair-step cracks follow mortar joints in masonry walls and may indicate foundation movement or moisture problems. '
+                'Look for bulging, dampness, or widening over time; remediation may be required.',
       },
       {
         'name': 'Hairline',
         'desc': 'Very thin, surface-level shrinkage cracks.',
         'icon': Icons.grain,
+        'details':
+            'Hairline cracks are very thin shrinkage cracks from curing or temperature changes. '
+                'They are usually cosmetic; seal to prevent moisture ingress and monitor for changes.',
       },
       {
         'name': 'Map/Alligator',
         'desc': 'Network of fine intersecting cracks.',
         'icon': Icons.map,
+        'details':
+            'Map or alligator cracking forms a network pattern caused by surface shrinkage or aging materials. '
+                'This often indicates surface deterioration; resurfacing or targeted repair may be needed.',
       },
     ];
 
@@ -106,8 +130,11 @@ class HomeScreen extends StatelessWidget {
                 title: const Text('Safety Levels'),
                 onTap: () {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Safety Levels coming soon')),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const SafetyLevelsScreen(),
+                    ),
                   );
                 },
               ),
@@ -116,8 +143,11 @@ class HomeScreen extends StatelessWidget {
                 title: const Text('History'),
                 onTap: () {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('History coming soon')),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const HistoryScreen(),
+                    ),
                   );
                 },
               ),
@@ -127,9 +157,11 @@ class HomeScreen extends StatelessWidget {
                 title: const Text('Terms & Conditions'),
                 onTap: () {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Terms & Conditions coming soon')),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const TermsScreen(),
+                    ),
                   );
                 },
               ),
@@ -138,8 +170,11 @@ class HomeScreen extends StatelessWidget {
                 title: const Text('Contact'),
                 onTap: () {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Contact coming soon')),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const ContactScreen(),
+                    ),
                   );
                 },
               ),
@@ -187,10 +222,9 @@ class HomeScreen extends StatelessWidget {
                 final item = crackTypes[index];
                 return InkWell(
                   borderRadius: BorderRadius.circular(12),
-                  onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('${item['name']} — more info coming soon'),
-                    ),
+                  onTap: () => _showCrackDetails(
+                    context,
+                    item,
                   ),
                   child: Card(
                     elevation: 2,
@@ -265,6 +299,72 @@ class HomeScreen extends StatelessWidget {
           style: TextStyle(fontFamily: 'Bold', color: Colors.white),
         ),
       ),
+    );
+  }
+
+  void _showCrackDetails(BuildContext context, Map<String, dynamic> item) {
+    const brand = Color(0xFF8B0C17);
+    showDialog(
+      context: context,
+      builder: (context) {
+        final IconData icon = item['icon'] as IconData;
+        final String name = item['name'] as String;
+        final String details =
+            (item['details'] as String?) ?? (item['desc'] as String);
+        return AlertDialog(
+          titlePadding: const EdgeInsets.fromLTRB(20, 16, 16, 0),
+          contentPadding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+          title: Row(
+            children: [
+              Icon(icon, color: brand),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  name,
+                  style: const TextStyle(
+                    fontFamily: 'Bold',
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  height: 2,
+                  width: 140,
+                  decoration: BoxDecoration(
+                    color: brand,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  details,
+                  style: const TextStyle(
+                    fontFamily: 'Regular',
+                    fontSize: 14,
+                    height: 1.4,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                'Close',
+                style: TextStyle(fontFamily: 'Bold', color: brand),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
