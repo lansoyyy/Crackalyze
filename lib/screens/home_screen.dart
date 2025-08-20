@@ -178,6 +178,15 @@ class HomeScreen extends StatelessWidget {
                   );
                 },
               ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.logout),
+                title: const Text('Logout'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showLogoutDialog(context);
+                },
+              ),
             ],
           ),
         ),
@@ -365,6 +374,42 @@ class HomeScreen extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    const brand = Color(0xFF8B0C17);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          'Logout Confirmation',
+          style: TextStyle(fontFamily: 'Bold', color: Colors.black87),
+        ),
+        content: const Text(
+          'Are you sure you want to logout?',
+          style: TextStyle(fontFamily: 'Regular', color: Colors.black87),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(fontFamily: 'Bold')),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // close dialog
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Logged out')),
+              );
+              // TODO: Integrate auth flow to navigate to a login screen
+            },
+            child: const Text(
+              'Logout',
+              style: TextStyle(fontFamily: 'Bold', color: brand),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
