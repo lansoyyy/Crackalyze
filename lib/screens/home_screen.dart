@@ -3,6 +3,7 @@ import 'package:crackalyze/screens/safety_levels_screen.dart';
 import 'package:crackalyze/screens/history_screen.dart';
 import 'package:crackalyze/screens/terms_screen.dart';
 import 'package:crackalyze/screens/contact_screen.dart';
+import 'package:crackalyze/screens/scan_camera_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -298,8 +299,11 @@ class HomeScreen extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Scan feature coming soon')),
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const ScanCameraScreen(),
+          ),
         ),
         backgroundColor: brand,
         icon: const Icon(Icons.center_focus_strong, color: Colors.white),
