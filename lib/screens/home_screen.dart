@@ -4,9 +4,45 @@ import 'package:crackalyze/screens/history_screen.dart';
 import 'package:crackalyze/screens/terms_screen.dart';
 import 'package:crackalyze/screens/contact_screen.dart';
 import 'package:crackalyze/screens/scan_camera_screen.dart';
+import 'package:crackalyze/screens/login_screen.dart';
+import 'package:crackalyze/services/auth_service.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
+
+  void _showLogoutDialog(BuildContext context) {
+    final authService = AuthService();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Logout'),
+          content: const Text('Are you sure you want to logout?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                await authService.logout();
+                if (context.mounted) {
+                  Navigator.of(context).pop(); // Close dialog
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(
+                        builder: (context) => const LoginScreen()),
+                    (route) => false,
+                  );
+                }
+              },
+              child: const Text('Logout'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -378,42 +414,6 @@ class HomeScreen extends StatelessWidget {
           ],
         );
       },
-    );
-  }
-
-  void _showLogoutDialog(BuildContext context) {
-    const brand = Color(0xFF8B0C17);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(
-          'Logout Confirmation',
-          style: TextStyle(fontFamily: 'Bold', color: Colors.black87),
-        ),
-        content: const Text(
-          'Are you sure you want to logout?',
-          style: TextStyle(fontFamily: 'Regular', color: Colors.black87),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(fontFamily: 'Bold')),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // close dialog
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Logged out')),
-              );
-              // TODO: Integrate auth flow to navigate to a login screen
-            },
-            child: const Text(
-              'Logout',
-              style: TextStyle(fontFamily: 'Bold', color: brand),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
