@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:crackalyze/utils/colors.dart';
 import 'package:crackalyze/widgets/textfield_widget.dart';
 import 'package:crackalyze/widgets/button_widget.dart';
@@ -35,12 +36,45 @@ class _ContactScreenState extends State<ContactScreen> {
     if (_formKey.currentState?.validate() ?? false) {
       FocusScope.of(context).unfocus();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Message sent. We\'ll get back to you soon.')),
+        const SnackBar(
+            content: Text('Message sent. We\'ll get back to you soon.')),
       );
       _nameCtrl.clear();
       _emailCtrl.clear();
       _messageCtrl.clear();
     }
+  }
+
+  // Launch URL helper method
+  Future<void> _launchUrl(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (!await launchUrl(uri)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not launch URL')),
+        );
+      }
+    }
+  }
+
+  // Contact methods
+  void _launchEmail() {
+    final Uri emailUri = Uri(
+      scheme: 'mailto',
+      path: 'support@crackalyze.com',
+      queryParameters: {
+        'subject': 'Inquiry from Crackalyze App',
+      },
+    );
+    _launchUrl(emailUri.toString());
+  }
+
+  void _launchPhone() {
+    _launchUrl('tel:+1234567890');
+  }
+
+  void _launchWebsite() {
+    _launchUrl('https://crackalyze.example.com');
   }
 
   @override
@@ -90,6 +124,53 @@ class _ContactScreenState extends State<ContactScreen> {
               ),
               const SizedBox(height: 24),
 
+              // Contact options
+              const Text(
+                'Contact Methods',
+                style: TextStyle(
+                  fontFamily: 'Bold',
+                  fontSize: 16,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  // Email button
+                  ElevatedButton(
+                    onPressed: _launchEmail,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primary,
+                      shape: const CircleBorder(),
+                      padding: const EdgeInsets.all(16),
+                    ),
+                    child: const Icon(Icons.email, color: Colors.white),
+                  ),
+                  // Phone button
+                  ElevatedButton(
+                    onPressed: _launchPhone,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primary,
+                      shape: const CircleBorder(),
+                      padding: const EdgeInsets.all(16),
+                    ),
+                    child: const Icon(Icons.phone, color: Colors.white),
+                  ),
+                  // Website button
+                  ElevatedButton(
+                    onPressed: _launchWebsite,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primary,
+                      shape: const CircleBorder(),
+                      padding: const EdgeInsets.all(16),
+                    ),
+                    child: const Icon(Icons.web, color: Colors.white),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
               // Name
               TextFieldWidget(
                 label: 'Name',
@@ -114,7 +195,8 @@ class _ContactScreenState extends State<ContactScreen> {
               // Message
               TextFieldWidget(
                 label: 'Message',
-                hint: 'How can we help? (optional details, e.g., device, steps)',
+                hint:
+                    'How can we help? (optional details, e.g., device, steps)',
                 controller: _messageCtrl,
                 width: double.infinity,
                 height: 140,
