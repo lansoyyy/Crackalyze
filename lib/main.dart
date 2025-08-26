@@ -1,6 +1,8 @@
+import 'package:crackalyze/firebase_options.dart';
 import 'package:crackalyze/screens/home_screen.dart';
 import 'package:crackalyze/screens/login_screen.dart';
 import 'package:crackalyze/services/auth_service.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 
@@ -8,6 +10,11 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await GetStorage.init();
   await AuthService().init();
+  await Firebase.initializeApp(
+    name: 'crackalyze',
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(const MyApp());
 }
 

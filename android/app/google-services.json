@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "783308171000",
+    "project_id": "crackalyze",
+    "storage_bucket": "crackalyze.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:783308171000:android:309547d2e87c74c56d3d0d",
+        "android_client_info": {
+          "package_name": "com.example.crackalyze"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDmmW007Lc9x2qpNXb2ZcR8oOg5yQ7bfBM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
