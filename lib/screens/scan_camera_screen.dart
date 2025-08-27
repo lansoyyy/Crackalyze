@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:crackalyze/utils/colors.dart';
 import 'package:crackalyze/screens/processing_screen.dart';
+import 'package:camera/camera.dart';
 
 class ScanCameraScreen extends StatefulWidget {
   const ScanCameraScreen({super.key});
@@ -9,10 +10,73 @@ class ScanCameraScreen extends StatefulWidget {
   State<ScanCameraScreen> createState() => _ScanCameraScreenState();
 }
 
-class _ScanCameraScreenState extends State<ScanCameraScreen> {
+class _ScanCameraScreenState extends State<ScanCameraScreen>
+    with WidgetsBindingObserver {
   bool _showGrid = true;
+  CameraController? _controller;
+  Future<void>? _initializeControllerFuture;
+  List<CameraDescription> _cameras = [];
 
-  void _capture() {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _initializeCamera();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // App state changed before we got the chance to initialize.
+    if (_controller == null || !_controller!.value.isInitialized) {
+      return;
+    }
+
+    if (state == AppLifecycleState.inactive) {
+      _controller?.dispose();
+    } else if (state == AppLifecycleState.resumed) {
+      _initializeCamera();
+    }
+  }
+
+  Future<void> _initializeCamera() async {
+    try {
+      // Get a list of all available cameras
+      _cameras = await availableCameras();
+
+      // Get a specific camera from the list of available cameras
+      // Use the first camera (usually the back camera)
+      final CameraDescription firstCamera = _cameras.first;
+
+      // Create the controller
+      _controller = CameraController(
+        firstCamera,
+        ResolutionPreset.medium,
+      );
+
+      // Next, initialize the controller. This returns a Future.
+      _initializeControllerFuture = _controller!.initialize();
+
+      // Update the UI
+      if (mounted) {
+        setState(() {});
+      }
+    } catch (e) {
+      // Handle any errors that occur during initialization
+      print('Error initializing camera: $e');
+    }
+  }
+
+  void _capture() async {
+    // Ensure that the camera is initialized
+    await _initializeControllerFuture;
+
     // Simulate a capture; proceed to processing screen
     Navigator.push(
       context,
@@ -47,44 +111,47 @@ class _ScanCameraScreenState extends State<ScanCameraScreen> {
       ),
       body: Stack(
         children: [
-          // Camera preview placeholder
-          Center(
-            child: AspectRatio(
-              aspectRatio: 3 / 4,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                  border: Border.all(color: Colors.white24, width: 2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Icon(Icons.camera_alt_outlined,
-                              size: 72, color: Colors.white54),
-                          SizedBox(height: 8),
-                          Text(
-                            'Camera preview placeholder',
-                            style: TextStyle(
-                              fontFamily: 'Regular',
-                              color: Colors.white60,
-                            ),
+          // Camera preview
+          FutureBuilder<void>(
+            future: _initializeControllerFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                // If the Future is complete, display the preview.
+                return Center(
+                  child: AspectRatio(
+                    aspectRatio: _controller!.value.aspectRatio,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        CameraPreview(_controller!),
+                        if (_showGrid)
+                          CustomPaint(
+                            painter: _GridPainter(),
                           ),
-                        ],
-                      ),
+                      ],
                     ),
-                    if (_showGrid)
-                      CustomPaint(
-                        painter: _GridPainter(),
+                  ),
+                );
+              } else {
+                // Otherwise, display a loading indicator.
+                return const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 8),
+                      Text(
+                        'Initializing camera...',
+                        style: TextStyle(
+                          fontFamily: 'Regular',
+                          color: Colors.white60,
+                        ),
                       ),
-                  ],
-                ),
-              ),
-            ),
+                    ],
+                  ),
+                );
+              }
+            },
           ),
 
           // Bottom control bar
@@ -137,11 +204,13 @@ class _GridPainter extends CustomPainter {
 
     // Vertical lines
     canvas.drawLine(Offset(thirdW, 0), Offset(thirdW, size.height), paint);
-    canvas.drawLine(Offset(2 * thirdW, 0), Offset(2 * thirdW, size.height), paint);
+    canvas.drawLine(
+        Offset(2 * thirdW, 0), Offset(2 * thirdW, size.height), paint);
 
     // Horizontal lines
     canvas.drawLine(Offset(0, thirdH), Offset(size.width, thirdH), paint);
-    canvas.drawLine(Offset(0, 2 * thirdH), Offset(size.width, 2 * thirdH), paint);
+    canvas.drawLine(
+        Offset(0, 2 * thirdH), Offset(size.width, 2 * thirdH), paint);
   }
 
   @override
