@@ -156,10 +156,10 @@ class HomeScreen extends StatelessWidget {
                 title: const Text('Types of Cracks'),
                 onTap: () {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Types of Cracks coming soon')),
-                  );
+                  // ScaffoldMessenger.of(context).showSnackBar(
+                  //   const SnackBar(
+                  //       content: Text('Types of Cracks coming soon')),
+                  // );
                 },
               ),
               ListTile(
