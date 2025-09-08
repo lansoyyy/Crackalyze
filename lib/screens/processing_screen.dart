@@ -27,24 +27,24 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
   }
 
   void _goToResult() {
-    // Simulated analysis result
+    // Simulated analysis result with detailed crack information
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (_) => ResultScreen(
-          crackType: 'Diagonal',
-          severity: 'MODERATE',
-          confidence: 0.86,
-          widthMm: 2.4,
-          lengthCm: 45,
+          crackType: 'Flexural Cracks',
+          severity: 'DANGEROUS',
+          confidence: 0.92,
+          widthMm: 0.2,
+          lengthCm: 35,
           analyzedAt: DateTime.now(),
           summary:
-              'The detected crack appears diagonal, likely due to shear or differential settlement. '
-              'Current severity is moderate. Monitoring is recommended.',
+              'The detected crack is classified as a flexural crack, occurring due to excessive bending or tensile stress. These cracks are typically found in tension zones or the bottom of a beam and are generally in a diagonal or vertical pattern.',
           recommendations: const [
-            'Monitor crack width weekly for changes (>0.5mm increase is notable).',
-            'Inspect for moisture and address drainage near foundations.',
-            'Consult a structural professional if widening or displacement occurs.',
+            'Immediate professional assessment is recommended due to the dangerous nature of flexural cracks.',
+            'Monitor for any increase in crack width or length.',
+            'Avoid placing additional loads on the affected structure.',
+            'Consider structural reinforcement or repair measures.',
           ],
         ),
       ),

@@ -10,36 +10,32 @@ class SafetyLevelsScreen extends StatelessWidget {
     final levels = const [
       {
         'title': 'SAFE',
-        'desc': 'Hairline or superficial (< 0.3 mm); cosmetic only.',
+        'desc':
+            'Not dangerous, as this is a crack only existing at the surface of structure, more a visual issue.',
         'color': Color(0xFF2E7D32),
         'icon': Icons.verified_user_outlined,
         'score': 0.2,
       },
       {
-        'title': 'MODERATELY SAFE',
-        'desc': 'Minor shrinkage/thermal (0.3–0.5 mm); monitor changes.',
-        'color': Color(0xFF558B2F),
-        'icon': Icons.security_outlined,
-        'score': 0.4,
-      },
-      {
         'title': 'MODERATE',
-        'desc': 'Noticeable widening (0.5–1.0 mm); schedule repair.',
+        'desc':
+            'Does not impose serious danger, but may be a sign of instability of the infrastructure.',
         'color': Color(0xFFF9A825),
         'icon': Icons.warning_amber_rounded,
-        'score': 0.6,
-      },
-      {
-        'title': 'MODERATELY DANGEROUS',
-        'desc': 'Potential structural concern (1–2 mm); assess soon.',
-        'color': Color(0xFFEF6C00),
-        'icon': Icons.report_problem_outlined,
-        'score': 0.8,
+        'score': 0.4,
       },
       {
         'title': 'DANGEROUS',
         'desc':
-            'Severe/progressive (> 2 mm) or displacement; urgent inspection.',
+            'Dangerous cracks that require immediate attention and professional assessment.',
+        'color': Color(0xFFEF6C00),
+        'icon': Icons.report_problem_outlined,
+        'score': 0.7,
+      },
+      {
+        'title': 'VERY DANGEROUS',
+        'desc':
+            'Very dangerous, as this is a sign that the concrete failed to carry a specific weight which lead to cracks.',
         'color': Color(0xFFC62828),
         'icon': Icons.dangerous_outlined,
         'score': 1.0,
@@ -92,6 +88,15 @@ class SafetyLevelsScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 6),
+                const Text(
+                  'Safety levels are determined based on the type and characteristics of detected cracks.',
+                  style: TextStyle(
+                    fontFamily: 'Regular',
+                    fontSize: 13,
+                    color: Colors.black54,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ],
             );
           }

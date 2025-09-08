@@ -182,6 +182,92 @@ class ResultScreen extends StatelessWidget {
               style: const TextStyle(fontFamily: 'Regular', height: 1.4),
             ),
 
+            // New section: Crack Details
+            const SizedBox(height: 16),
+            const Text(
+              'Crack Details',
+              style: TextStyle(fontFamily: 'Bold', fontSize: 16),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.black12),
+                color: Colors.white,
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Category: Structural Concrete Cracks',
+                    style: TextStyle(
+                      fontFamily: 'Bold',
+                      fontSize: 14,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'What causes it:',
+                    style: TextStyle(
+                      fontFamily: 'Bold',
+                      fontSize: 13,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'These cracks occur due to excessive bending or tensile stress. Concrete materials are stronger under compression rather than tension. These are typically found in tension zones or the bottom of a beam. These cracks are generally in a diagonal or vertical pattern of the member, and is perpendicular to the direction of the load.',
+                    style: TextStyle(
+                      fontFamily: 'Regular',
+                      fontSize: 13,
+                      height: 1.4,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Typical measurements:',
+                    style: TextStyle(
+                      fontFamily: 'Bold',
+                      fontSize: 13,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    '?',
+                    style: TextStyle(
+                      fontFamily: 'Regular',
+                      fontSize: 13,
+                      height: 1.4,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Safety level:',
+                    style: TextStyle(
+                      fontFamily: 'Bold',
+                      fontSize: 13,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Dangerous',
+                    style: TextStyle(
+                      fontFamily: 'Regular',
+                      fontSize: 13,
+                      height: 1.4,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
             const SizedBox(height: 16),
             const Text(
               'Recommendations',
@@ -218,7 +304,10 @@ class ResultScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const EarthquakeSimulationScreen(),
+                    builder: (_) => EarthquakeSimulationScreen(
+                      crackType: crackType,
+                      severity: severity,
+                    ),
                   ),
                 );
               },
