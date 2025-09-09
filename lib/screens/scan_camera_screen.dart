@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:crackalyze/utils/colors.dart';
 import 'package:crackalyze/screens/processing_screen.dart';
 import 'package:camera/camera.dart';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
+import 'package:crackalyze/services/crack_detection_service.dart';
 
 class ScanCameraScreen extends StatefulWidget {
   const ScanCameraScreen({super.key});
@@ -16,6 +20,7 @@ class _ScanCameraScreenState extends State<ScanCameraScreen>
   CameraController? _controller;
   Future<void>? _initializeControllerFuture;
   List<CameraDescription> _cameras = [];
+  bool _isProcessing = false;
 
   @override
   void initState() {
@@ -74,16 +79,44 @@ class _ScanCameraScreenState extends State<ScanCameraScreen>
   }
 
   void _capture() async {
-    // Ensure that the camera is initialized
-    await _initializeControllerFuture;
+    if (_isProcessing) return;
 
-    // Simulate a capture; proceed to processing screen
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const ProcessingScreen(),
-      ),
-    );
+    setState(() {
+      _isProcessing = true;
+    });
+
+    try {
+      // Ensure that the camera is initialized
+      await _initializeControllerFuture;
+
+      // Take a picture
+      final XFile picture = await _controller!.takePicture();
+
+      // Navigate to processing screen with the captured image
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ProcessingScreen(imagePath: picture.path),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error capturing image: $e');
+      // Show error to user
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error capturing image. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      setState(() {
+        _isProcessing = false;
+      });
+    }
   }
 
   @override
@@ -172,13 +205,26 @@ class _ScanCameraScreenState extends State<ScanCameraScreen>
                   child: Padding(
                     padding: const EdgeInsets.all(6.0),
                     child: InkWell(
-                      onTap: _capture,
+                      onTap: _isProcessing ? null : _capture,
                       borderRadius: BorderRadius.circular(999),
                       child: Container(
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: primary,
+                          color: _isProcessing ? Colors.grey : primary,
                         ),
+                        child: _isProcessing
+                            ? const Center(
+                                child: SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white),
+                                  ),
+                                ),
+                              )
+                            : null,
                       ),
                     ),
                   ),

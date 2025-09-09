@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:crackalyze/utils/colors.dart';
 import 'package:crackalyze/screens/earthquake_simulation_screen.dart';
@@ -12,6 +14,7 @@ class ResultScreen extends StatelessWidget {
   final DateTime analyzedAt;
   final String summary;
   final List<String> recommendations;
+  final String? imagePath; // New parameter for image path
 
   const ResultScreen({
     super.key,
@@ -23,6 +26,7 @@ class ResultScreen extends StatelessWidget {
     required this.analyzedAt,
     required this.summary,
     required this.recommendations,
+    this.imagePath, // Optional image path
   });
 
   Color _levelColor(String level) {
@@ -57,7 +61,7 @@ class ResultScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Analyzed image placeholder
+            // Analyzed image placeholder - now displays actual image
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: AspectRatio(
@@ -67,18 +71,40 @@ class ResultScreen extends StatelessWidget {
                     border: Border.all(color: Colors.black26),
                     color: Colors.grey[100],
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Icon(Icons.image, size: 64, color: Colors.black26),
-                      SizedBox(height: 6),
-                      Text(
-                        'Analyzed image placeholder',
-                        style: TextStyle(
-                            fontFamily: 'Regular', color: Colors.black45),
-                      ),
-                    ],
-                  ),
+                  child: imagePath != null && File(imagePath!).existsSync()
+                      ? Image.file(
+                          File(imagePath!),
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            // Fallback to placeholder if image fails to load
+                            return Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: const [
+                                Icon(Icons.image,
+                                    size: 64, color: Colors.black26),
+                                SizedBox(height: 6),
+                                Text(
+                                  'Failed to load image',
+                                  style: TextStyle(
+                                      fontFamily: 'Regular',
+                                      color: Colors.black45),
+                                ),
+                              ],
+                            );
+                          },
+                        )
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            Icon(Icons.image, size: 64, color: Colors.black26),
+                            SizedBox(height: 6),
+                            Text(
+                              'Analyzed image placeholder',
+                              style: TextStyle(
+                                  fontFamily: 'Regular', color: Colors.black45),
+                            ),
+                          ],
+                        ),
                 ),
               ),
             ),
@@ -196,10 +222,10 @@ class ResultScreen extends StatelessWidget {
                 border: Border.all(color: Colors.black12),
                 color: Colors.white,
               ),
-              child: const Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Category: Structural Concrete Cracks',
                     style: TextStyle(
                       fontFamily: 'Bold',
@@ -207,8 +233,8 @@ class ResultScreen extends StatelessWidget {
                       color: Colors.black87,
                     ),
                   ),
-                  SizedBox(height: 8),
-                  Text(
+                  const SizedBox(height: 8),
+                  const Text(
                     'What causes it:',
                     style: TextStyle(
                       fontFamily: 'Bold',
@@ -216,18 +242,18 @@ class ResultScreen extends StatelessWidget {
                       color: Colors.black87,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
-                    'These cracks occur due to excessive bending or tensile stress. Concrete materials are stronger under compression rather than tension. These are typically found in tension zones or the bottom of a beam. These cracks are generally in a diagonal or vertical pattern of the member, and is perpendicular to the direction of the load.',
-                    style: TextStyle(
+                    _getCausesForCrackType(crackType),
+                    style: const TextStyle(
                       fontFamily: 'Regular',
                       fontSize: 13,
                       height: 1.4,
                       color: Colors.black87,
                     ),
                   ),
-                  SizedBox(height: 8),
-                  Text(
+                  const SizedBox(height: 8),
+                  const Text(
                     'Typical measurements:',
                     style: TextStyle(
                       fontFamily: 'Bold',
@@ -235,18 +261,18 @@ class ResultScreen extends StatelessWidget {
                       color: Colors.black87,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
-                    '?',
-                    style: TextStyle(
+                    _getMeasurementsForCrackType(crackType),
+                    style: const TextStyle(
                       fontFamily: 'Regular',
                       fontSize: 13,
                       height: 1.4,
                       color: Colors.black87,
                     ),
                   ),
-                  SizedBox(height: 8),
-                  Text(
+                  const SizedBox(height: 8),
+                  const Text(
                     'Safety level:',
                     style: TextStyle(
                       fontFamily: 'Bold',
@@ -254,10 +280,10 @@ class ResultScreen extends StatelessWidget {
                       color: Colors.black87,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
-                    'Dangerous',
-                    style: TextStyle(
+                    _getDangerForCrackType(crackType),
+                    style: const TextStyle(
                       fontFamily: 'Regular',
                       fontSize: 13,
                       height: 1.4,
@@ -327,6 +353,78 @@ class ResultScreen extends StatelessWidget {
   String _formatTime(DateTime dt) {
     return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}  '
         '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+  }
+
+  String _getCausesForCrackType(String crackType) {
+    // In a real implementation, this would come from your crack database
+    switch (crackType) {
+      case 'Flexural Cracks':
+        return 'These cracks occur due to excessive bending or tensile stress. Concrete materials are stronger under compression rather than tension. These are typically found in tension zones or the bottom of a beam. These cracks are generally in a diagonal or vertical pattern of the member, and is perpendicular to the direction of the load.';
+      case 'Shear Cracks':
+        return 'These cracks happen when shear capacity is exceeded. This happens when sections of concrete slide past each other in a way that pulls them apart. These are rare occurrences and have a diagonal pattern.';
+      case 'Cracking Due to Overloading':
+        return 'When the weight inside an infrastructure exceeds the designated limit. This causes stress to the concrete leading to structural failure.';
+      case 'Foundation Settlement Cracks':
+        return 'Movement of the ground (either sinking or compression) over time affects the concrete, leading to cracks with a stair-like pattern.';
+      case 'Internal Reinforcement Corrosion Cracks':
+        return 'The corrosion of steel within the concrete wall. Steel bars are said to grow 8 times larger after corrosion, caused by chloride ion ingress or carbonation. These cracks are parallel to the steel bar and take a long time to appear.';
+      case 'Plastic Shrinkage Crack':
+        return 'Rapid evaporation of water from the concrete before settlement, leading water loss and eventually shrinkage of concrete. This leads to a surface divided into piece due to the shrinkage rather than a smooth finish.';
+      case 'Crazing Cracks':
+        return 'Uneven rapid drying of the surface of concrete, leading to the pulling away of the surface.';
+      case 'Hairline Cracks':
+        return 'When concrete settles during the process of curing. These are thin cracks that may go very deep in depth.';
+      default:
+        return 'Information not available for this crack type.';
+    }
+  }
+
+  String _getMeasurementsForCrackType(String crackType) {
+    // In a real implementation, this would come from your crack database
+    switch (crackType) {
+      case 'Flexural Cracks':
+        return '?';
+      case 'Shear Cracks':
+        return '?';
+      case 'Cracking Due to Overloading':
+        return '0.1mm - 0.3mm';
+      case 'Foundation Settlement Cracks':
+        return '?';
+      case 'Internal Reinforcement Corrosion Cracks':
+        return '0.1mm - 0.4mm (width), ≥0.015mm (depth)';
+      case 'Plastic Shrinkage Crack':
+        return '3mm (width), 50mm - 100mm (depth)';
+      case 'Crazing Cracks':
+        return '10mm - 40mm (width of a single hexagonal area), <3mm (depth)';
+      case 'Hairline Cracks':
+        return 'Less than 1mm to 1.5mm (width)';
+      default:
+        return 'Information not available for this crack type.';
+    }
+  }
+
+  String _getDangerForCrackType(String crackType) {
+    // In a real implementation, this would come from your crack database
+    switch (crackType) {
+      case 'Flexural Cracks':
+        return 'Dangerous';
+      case 'Shear Cracks':
+        return 'Dangerous';
+      case 'Cracking Due to Overloading':
+        return 'Very dangerous, as this is a sign that the concrete failed to carry a specific weight which lead to cracks. This may mean that the maximum capacity the concrete can handle has lessened as damage has occurred within the structure.';
+      case 'Foundation Settlement Cracks':
+        return 'Does not impose serious danger, but may be a sign of instability of the infrastructure. More concerning if there are uneven floors or water seepage.';
+      case 'Internal Reinforcement Corrosion Cracks':
+        return 'Internal deterioration of materials may signify a weaker base, which may lead to structural failure.';
+      case 'Plastic Shrinkage Crack':
+        return 'Not dangerous, more of an issue with visual appearance and durability of the material.';
+      case 'Crazing Cracks':
+        return 'Not dangerous, as this is a crack only existing at the surface of structure, more a visual issue.';
+      case 'Hairline Cracks':
+        return 'Can lead to more serious cracks once the concrete has dried. Constant monitoring over time is important. If the crack starts to grow, this may be a sign of a growing issue within the stability of the building.';
+      default:
+        return 'Information not available for this crack type.';
+    }
   }
 }
 

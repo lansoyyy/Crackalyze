@@ -3,11 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:crackalyze/utils/colors.dart';
 import 'package:crackalyze/screens/home_screen.dart';
+import 'package:vibration/vibration.dart';
 
 class EarthquakeSimulationScreen extends StatefulWidget {
   final String crackType;
   final String severity;
-  
+
   const EarthquakeSimulationScreen({
     super.key,
     this.crackType = 'Flexural Cracks',
@@ -15,7 +16,8 @@ class EarthquakeSimulationScreen extends StatefulWidget {
   });
 
   @override
-  State<EarthquakeSimulationScreen> createState() => _EarthquakeSimulationScreenState();
+  State<EarthquakeSimulationScreen> createState() =>
+      _EarthquakeSimulationScreenState();
 }
 
 class _EarthquakeSimulationScreenState extends State<EarthquakeSimulationScreen>
@@ -23,14 +25,16 @@ class _EarthquakeSimulationScreenState extends State<EarthquakeSimulationScreen>
   late AnimationController _controller;
   late Animation<double> _shake;
   Timer? _timer;
+  bool _isVibrating = false;
 
   @override
   void initState() {
     super.initState();
     // Adjust shake intensity based on crack severity
     double shakeIntensity = _getShakeIntensity(widget.severity);
-    
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
+
+    _controller = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 400));
     _shake = Tween<double>(begin: -shakeIntensity, end: shakeIntensity).animate(
       CurvedAnimation(parent: _controller, curve: Curves.elasticIn),
     );
@@ -40,6 +44,9 @@ class _EarthquakeSimulationScreenState extends State<EarthquakeSimulationScreen>
     _timer = Timer(const Duration(seconds: 6), () {
       if (mounted) _controller.stop();
     });
+
+    // Start vibration based on severity
+    _startVibration();
   }
 
   double _getShakeIntensity(String severity) {
@@ -47,18 +54,88 @@ class _EarthquakeSimulationScreenState extends State<EarthquakeSimulationScreen>
       case 'DANGEROUS':
         return 12.0; // Strong shake for dangerous cracks
       case 'MODERATE':
-        return 8.0;  // Medium shake for moderate cracks
+        return 8.0; // Medium shake for moderate cracks
       case 'SAFE':
-        return 4.0;   // Light shake for safe cracks
+        return 4.0; // Light shake for safe cracks
       default:
-        return 6.0;   // Default medium shake
+        return 6.0; // Default medium shake
     }
+  }
+
+  int _getVibrationDuration(String severity) {
+    switch (severity.toUpperCase()) {
+      case 'DANGEROUS':
+        return 1000; // Longer vibration for dangerous cracks
+      case 'MODERATE':
+        return 500; // Medium vibration for moderate cracks
+      case 'SAFE':
+        return 200; // Short vibration for safe cracks
+      default:
+        return 300; // Default vibration duration
+    }
+  }
+
+  int _getVibrationAmplitude(String severity) {
+    switch (severity.toUpperCase()) {
+      case 'DANGEROUS':
+        return 255; // Maximum amplitude for dangerous cracks
+      case 'MODERATE':
+        return 128; // Medium amplitude for moderate cracks
+      case 'SAFE':
+        return 64; // Low amplitude for safe cracks
+      default:
+        return 100; // Default amplitude
+    }
+  }
+
+  void _startVibration() async {
+    // Check if vibration is available
+    bool? hasVibrator = await Vibration.hasVibrator();
+    if (hasVibrator == false) return;
+
+    bool? hasAmplitudeControl = await Vibration.hasAmplitudeControl();
+
+    setState(() {
+      _isVibrating = true;
+    });
+
+    // Vibrate based on severity
+    if (hasAmplitudeControl == true) {
+      // Use amplitude control if available
+      Vibration.vibrate(
+        duration: _getVibrationDuration(widget.severity),
+        amplitude: _getVibrationAmplitude(widget.severity),
+      );
+    } else {
+      // Use pattern-based vibration for older devices
+      Vibration.vibrate(
+        pattern: [0, 200, 100, 200],
+      );
+    }
+
+    // Stop vibration after duration
+    Timer(Duration(milliseconds: _getVibrationDuration(widget.severity) + 200),
+        () {
+      if (mounted) {
+        setState(() {
+          _isVibrating = false;
+        });
+      }
+    });
+  }
+
+  void _stopVibration() {
+    Vibration.cancel();
+    setState(() {
+      _isVibrating = false;
+    });
   }
 
   @override
   void dispose() {
     _timer?.cancel();
     _controller.dispose();
+    _stopVibration();
     super.dispose();
   }
 
@@ -87,45 +164,62 @@ class _EarthquakeSimulationScreenState extends State<EarthquakeSimulationScreen>
                   child: child,
                 );
               },
-              child: AspectRatio(
-                aspectRatio: 16 / 9,
-                child: Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.black26),
-                    borderRadius: BorderRadius.circular(12),
-                    color: Colors.black,
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.videocam, size: 64, color: Colors.white54),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Earthquake simulation for ${widget.crackType}',
-                        style: const TextStyle(fontFamily: 'Regular', color: Colors.white60),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Severity: ${widget.severity}',
-                        style: const TextStyle(fontFamily: 'Bold', color: Colors.white),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
+              child: SizedBox(
+                // decoration: BoxDecoration(
+                //   border: Border.all(color: Colors.black26),
+                //   borderRadius: BorderRadius.circular(12),
+                //   color: Colors.black,
+                // ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      'assets/images/home.png',
+                      height: 200,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Earthquake simulation for ${widget.crackType}',
+                      style: const TextStyle(
+                          fontFamily: 'Regular', color: Colors.white60),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Severity: ${widget.severity}',
+                      style: const TextStyle(
+                          fontFamily: 'Bold', color: Colors.white),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.vibration,
+                            size: 16, color: Colors.white60),
+                        const SizedBox(width: 4),
+                        Text(
+                          _isVibrating ? 'Vibrating...' : 'Vibration active',
+                          style: const TextStyle(
+                              fontFamily: 'Regular', color: Colors.white60),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(height: 20),
             Text(
               'Simulating earthquake effects based on ${widget.crackType.toLowerCase()}',
-              style: const TextStyle(fontFamily: 'Regular', fontSize: 14, color: Colors.black54),
+              style: const TextStyle(
+                  fontFamily: 'Regular', fontSize: 14, color: Colors.black54),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
               _getSimulationDescription(widget.severity),
-              style: const TextStyle(fontFamily: 'Regular', fontSize: 12, color: Colors.black87),
+              style: const TextStyle(
+                  fontFamily: 'Regular', fontSize: 12, color: Colors.black87),
               textAlign: TextAlign.center,
             ),
           ],
@@ -140,12 +234,15 @@ class _EarthquakeSimulationScreenState extends State<EarthquakeSimulationScreen>
               onPressed: () {
                 if (_controller.isAnimating) {
                   _controller.stop();
+                  _stopVibration();
                 } else {
                   _controller.repeat(reverse: true);
+                  _startVibration();
                 }
                 setState(() {});
               },
-              icon: Icon(_controller.isAnimating ? Icons.pause : Icons.play_arrow),
+              icon: Icon(
+                  _controller.isAnimating ? Icons.pause : Icons.play_arrow),
               label: Text(_controller.isAnimating ? 'Pause' : 'Play'),
               style: ElevatedButton.styleFrom(backgroundColor: primary),
             ),
