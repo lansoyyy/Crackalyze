@@ -225,9 +225,9 @@ class ResultScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Category: Structural Concrete Cracks',
-                    style: TextStyle(
+                  Text(
+                    _getCategoryForCrackType(crackType),
+                    style: const TextStyle(
                       fontFamily: 'Bold',
                       fontSize: 14,
                       color: Colors.black87,
@@ -355,77 +355,120 @@ class ResultScreen extends StatelessWidget {
         '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
   }
 
-  String _getCausesForCrackType(String crackType) {
-    // In a real implementation, this would come from your crack database
-    switch (crackType) {
-      case 'Flexural Cracks':
-        return 'These cracks occur due to excessive bending or tensile stress. Concrete materials are stronger under compression rather than tension. These are typically found in tension zones or the bottom of a beam. These cracks are generally in a diagonal or vertical pattern of the member, and is perpendicular to the direction of the load.';
-      case 'Shear Cracks':
-        return 'These cracks happen when shear capacity is exceeded. This happens when sections of concrete slide past each other in a way that pulls them apart. These are rare occurrences and have a diagonal pattern.';
-      case 'Cracking Due to Overloading':
-        return 'When the weight inside an infrastructure exceeds the designated limit. This causes stress to the concrete leading to structural failure.';
-      case 'Foundation Settlement Cracks':
-        return 'Movement of the ground (either sinking or compression) over time affects the concrete, leading to cracks with a stair-like pattern.';
-      case 'Internal Reinforcement Corrosion Cracks':
-        return 'The corrosion of steel within the concrete wall. Steel bars are said to grow 8 times larger after corrosion, caused by chloride ion ingress or carbonation. These cracks are parallel to the steel bar and take a long time to appear.';
-      case 'Plastic Shrinkage Crack':
-        return 'Rapid evaporation of water from the concrete before settlement, leading water loss and eventually shrinkage of concrete. This leads to a surface divided into piece due to the shrinkage rather than a smooth finish.';
-      case 'Crazing Cracks':
-        return 'Uneven rapid drying of the surface of concrete, leading to the pulling away of the surface.';
-      case 'Hairline Cracks':
-        return 'When concrete settles during the process of curing. These are thin cracks that may go very deep in depth.';
-      default:
-        return 'Information not available for this crack type.';
+  String _getCategoryForCrackType(String crackType) {
+    // Find the crack type in our database
+    for (final crack in _crackDatabase) {
+      if (crack['name'] == crackType) {
+        return 'Category: ${crack['category']}';
+      }
     }
+    return 'Category: Unknown';
+  }
+
+  String _getCausesForCrackType(String crackType) {
+    // Find the crack type in our database
+    for (final crack in _crackDatabase) {
+      if (crack['name'] == crackType) {
+        return crack['causes'];
+      }
+    }
+    return 'Information not available for this crack type.';
   }
 
   String _getMeasurementsForCrackType(String crackType) {
-    // In a real implementation, this would come from your crack database
-    switch (crackType) {
-      case 'Flexural Cracks':
-        return '?';
-      case 'Shear Cracks':
-        return '?';
-      case 'Cracking Due to Overloading':
-        return '0.1mm - 0.3mm';
-      case 'Foundation Settlement Cracks':
-        return '?';
-      case 'Internal Reinforcement Corrosion Cracks':
-        return '0.1mm - 0.4mm (width), ≥0.015mm (depth)';
-      case 'Plastic Shrinkage Crack':
-        return '3mm (width), 50mm - 100mm (depth)';
-      case 'Crazing Cracks':
-        return '10mm - 40mm (width of a single hexagonal area), <3mm (depth)';
-      case 'Hairline Cracks':
-        return 'Less than 1mm to 1.5mm (width)';
-      default:
-        return 'Information not available for this crack type.';
+    // Find the crack type in our database
+    for (final crack in _crackDatabase) {
+      if (crack['name'] == crackType) {
+        return crack['measurements'];
+      }
     }
+    return 'Information not available for this crack type.';
   }
 
   String _getDangerForCrackType(String crackType) {
-    // In a real implementation, this would come from your crack database
-    switch (crackType) {
-      case 'Flexural Cracks':
-        return 'Dangerous';
-      case 'Shear Cracks':
-        return 'Dangerous';
-      case 'Cracking Due to Overloading':
-        return 'Very dangerous, as this is a sign that the concrete failed to carry a specific weight which lead to cracks. This may mean that the maximum capacity the concrete can handle has lessened as damage has occurred within the structure.';
-      case 'Foundation Settlement Cracks':
-        return 'Does not impose serious danger, but may be a sign of instability of the infrastructure. More concerning if there are uneven floors or water seepage.';
-      case 'Internal Reinforcement Corrosion Cracks':
-        return 'Internal deterioration of materials may signify a weaker base, which may lead to structural failure.';
-      case 'Plastic Shrinkage Crack':
-        return 'Not dangerous, more of an issue with visual appearance and durability of the material.';
-      case 'Crazing Cracks':
-        return 'Not dangerous, as this is a crack only existing at the surface of structure, more a visual issue.';
-      case 'Hairline Cracks':
-        return 'Can lead to more serious cracks once the concrete has dried. Constant monitoring over time is important. If the crack starts to grow, this may be a sign of a growing issue within the stability of the building.';
-      default:
-        return 'Information not available for this crack type.';
+    // Find the crack type in our database
+    for (final crack in _crackDatabase) {
+      if (crack['name'] == crackType) {
+        return crack['danger'];
+      }
     }
+    return 'Information not available for this crack type.';
   }
+
+  // Crack database - this should ideally be moved to a service
+  static const List<Map<String, dynamic>> _crackDatabase = [
+    {
+      'name': 'Flexural Cracks',
+      'category': 'Structural Concrete Cracks',
+      'causes':
+          'These cracks occur due to excessive bending or tensile stress. Concrete materials are stronger under compression rather than tension. These are typically found in tension zones or the bottom of a beam. These cracks are generally in a diagonal or vertical pattern of the member, and is perpendicular to the direction of the load.',
+      'measurements': '?',
+      'danger': 'Dangerous',
+    },
+    {
+      'name': 'Shear Cracks',
+      'category': 'Structural Concrete Cracks',
+      'causes':
+          'These cracks happen when shear capacity is exceeded. This happens when sections of concrete slide past each other in a way that pulls them apart. These are rare occurrences and have a diagonal pattern.',
+      'measurements': '?',
+      'danger': 'Dangerous',
+    },
+    {
+      'name': 'Cracking Due to Overloading',
+      'category': 'Structural Concrete Cracks',
+      'causes':
+          'When the weight inside an infrastructure exceeds the designated limit. This causes stress to the concrete leading to structural failure.',
+      'measurements': '0.1mm - 0.3mm',
+      'danger':
+          'Very dangerous, as this is a sign that the concrete failed to carry a specific weight which lead to cracks. This may mean that the maximum capacity the concrete can handle has lessened as damage has occurred within the structure.',
+    },
+    {
+      'name': 'Foundation Settlement Cracks',
+      'category': 'Structural Concrete Cracks',
+      'causes':
+          'Movement of the ground (either sinking or compression) over time affects the concrete, leading to cracks with a stair-like pattern.',
+      'measurements': '?',
+      'danger':
+          'Does not impose serious danger, but may be a sign of instability of the infrastructure. More concerning if there are uneven floors or water seepage.',
+    },
+    {
+      'name': 'Internal Reinforcement Corrosion Cracks',
+      'category': 'Structural Concrete Cracks',
+      'causes':
+          'The corrosion of steel within the concrete wall. Steel bars are said to grow 8 times larger after corrosion, caused by chloride ion ingress or carbonation. These cracks are parallel to the steel bar and take a long time to appear.',
+      'measurements': '0.1mm - 0.4mm (width), ≥0.015mm (depth)',
+      'danger':
+          'Internal deterioration of materials may signify a weaker base, which may lead to structural failure.',
+    },
+    {
+      'name': 'Plastic Shrinkage Crack',
+      'category': 'Non-structural Cracks',
+      'causes':
+          'Rapid evaporation of water from the concrete before settlement, leading water loss and eventually shrinkage of concrete. This leads to a surface divided into piece due to the shrinkage rather than a smooth finish.',
+      'measurements': '3mm (width), 50mm - 100mm (depth)',
+      'danger':
+          'Not dangerous, more of an issue with visual appearance and durability of the material.',
+    },
+    {
+      'name': 'Crazing Cracks',
+      'category': 'Non-structural Cracks',
+      'causes':
+          'Uneven rapid drying of the surface of concrete, leading to the pulling away of the surface.',
+      'measurements':
+          '10mm - 40mm (width of a single hexagonal area), <3mm (depth)',
+      'danger':
+          'Not dangerous, as this is a crack only existing at the surface of structure, more a visual issue.',
+    },
+    {
+      'name': 'Hairline Cracks',
+      'category': 'Non-structural Cracks',
+      'causes':
+          'When concrete settles during the process of curing. These are thin cracks that may go very deep in depth.',
+      'measurements': 'Less than 1mm to 1.5mm (width)',
+      'danger':
+          'Can lead to more serious cracks once the concrete has dried. Constant monitoring over time is important. If the crack starts to grow, this may be a sign of a growing issue within the stability of the building.',
+    },
+  ];
 }
 
 class _MetricCard extends StatelessWidget {

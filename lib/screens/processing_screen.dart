@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:crackalyze/utils/colors.dart';
 import 'package:crackalyze/screens/result_screen.dart';
 import 'package:crackalyze/services/crack_detection_service.dart';
+import 'package:crackalyze/services/history_service.dart';
+import 'package:crackalyze/services/auth_service.dart';
 
 class ProcessingScreen extends StatefulWidget {
   final String imagePath;
@@ -18,11 +20,15 @@ class ProcessingScreen extends StatefulWidget {
 class _ProcessingScreenState extends State<ProcessingScreen> {
   Timer? _timer;
   late CrackDetectionService _detectionService;
+  late HistoryService _historyService;
+  late AuthService _authService;
 
   @override
   void initState() {
     super.initState();
     _detectionService = CrackDetectionService();
+    _historyService = HistoryService();
+    _authService = AuthService();
     // Start processing after a short delay to show the processing screen
     _timer = Timer(const Duration(milliseconds: 500), _processImage);
   }
@@ -46,12 +52,39 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
       final result = await _detectionService.analyzeImage(imageFile);
 
       if (result['success'] as bool) {
+        // Save to history before showing result
+        await _saveToHistory(result);
         _showCrackResult(result);
       } else {
         _showErrorResult(result['causes'] as String);
       }
     } catch (e) {
       _showErrorResult('Error processing image: $e');
+    }
+  }
+
+  Future<void> _saveToHistory(Map<String, dynamic> result) async {
+    try {
+      // Get current user ID (using email as ID for simplicity)
+      final userId = _authService.currentUserEmail ?? 'anonymous';
+
+      // Save scan record to Firestore
+      await _historyService.addScanRecord(
+        userId: userId,
+        crackType: result['crackType'] as String,
+        severity: _mapDangerToSeverity(result['danger'] as String),
+        confidence: result['confidence'] as double,
+        widthMm: (result['characteristics']['width'] as double?) ?? 0.5,
+        lengthCm:
+            ((result['characteristics']['length'] as double?) ?? 50.0) / 10,
+        summary: result['causes'] as String,
+        recommendations: _getRecommendations(result['danger'] as String),
+        imagePath: widget.imagePath,
+        analyzedAt: DateTime.now(),
+      );
+    } catch (e) {
+      // Log error but don't stop the flow
+      print('Failed to save to history: $e');
     }
   }
 

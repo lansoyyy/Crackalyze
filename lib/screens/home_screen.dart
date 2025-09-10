@@ -181,11 +181,6 @@ class HomeScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               ListTile(
-                leading: CircleAvatar(
-                  radius: 20,
-                  backgroundColor: Colors.transparent,
-                  child: Image.asset('assets/images/logo.png'),
-                ),
                 title: const Text(
                   'Crackalyze',
                   style: TextStyle(fontFamily: 'Bold', fontSize: 18),
