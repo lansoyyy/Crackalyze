@@ -123,79 +123,85 @@ class ResultScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: lc.withOpacity(0.10),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: lc.withOpacity(0.25)),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.shield, size: 16, color: lc),
-                      const SizedBox(width: 6),
-                      Text(
-                        severity,
-                        style: TextStyle(
-                          fontFamily: 'Bold',
-                          fontSize: 12,
-                          color: lc,
+                // Only show severity chip if it's not "SAFE" (for "No Crack Detected" cases)
+                if (severity != 'SAFE')
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: lc.withOpacity(0.10),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: lc.withOpacity(0.25)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.shield, size: 16, color: lc),
+                        const SizedBox(width: 6),
+                        Text(
+                          severity,
+                          style: TextStyle(
+                            fontFamily: 'Bold',
+                            fontSize: 12,
+                            color: lc,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                const Icon(Icons.speed, size: 16, color: Colors.black54),
-                const SizedBox(width: 6),
-                const Text('Confidence:',
-                    style: TextStyle(fontFamily: 'Medium')),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
-                    child: LinearProgressIndicator(
-                      value: confidence.clamp(0, 1),
-                      minHeight: 8,
-                      color: primary,
-                      backgroundColor: Colors.black12,
+                      ],
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Text('${(confidence * 100).toStringAsFixed(0)}%',
-                    style: const TextStyle(fontFamily: 'Medium')),
               ],
             ),
 
             const SizedBox(height: 12),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                _MetricCard(
-                  label: 'Width',
-                  value: '${widthMm.toStringAsFixed(1)} mm',
-                  icon: Icons.fullscreen,
-                ),
-                _MetricCard(
-                  label: 'Length',
-                  value: '${lengthCm.toStringAsFixed(0)} cm',
-                  icon: Icons.straighten,
-                ),
-                _MetricCard(
-                  label: 'Analyzed',
-                  value: _formatTime(analyzedAt),
-                  icon: Icons.event,
-                ),
-              ],
-            ),
+            // Only show confidence indicator if confidence > 0
+            if (confidence > 0)
+              Row(
+                children: [
+                  const Icon(Icons.speed, size: 16, color: Colors.black54),
+                  const SizedBox(width: 6),
+                  const Text('Confidence:',
+                      style: TextStyle(fontFamily: 'Medium')),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: LinearProgressIndicator(
+                        value: confidence.clamp(0, 1),
+                        minHeight: 8,
+                        color: primary,
+                        backgroundColor: Colors.black12,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text('${(confidence * 100).toStringAsFixed(0)}%',
+                      style: const TextStyle(fontFamily: 'Medium')),
+                ],
+              ),
+
+            const SizedBox(height: 12),
+            // Only show metrics if they're meaningful (not for "No Crack Detected")
+            if (crackType != 'No Crack Detected')
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  _MetricCard(
+                    label: 'Width',
+                    value: '${widthMm.toStringAsFixed(1)} mm',
+                    icon: Icons.fullscreen,
+                  ),
+                  _MetricCard(
+                    label: 'Length',
+                    value: '${lengthCm.toStringAsFixed(0)} cm',
+                    icon: Icons.straighten,
+                  ),
+                  _MetricCard(
+                    label: 'Analyzed',
+                    value: _formatTime(analyzedAt),
+                    icon: Icons.event,
+                  ),
+                ],
+              ),
 
             const SizedBox(height: 16),
             const Text(
@@ -208,91 +214,94 @@ class ResultScreen extends StatelessWidget {
               style: const TextStyle(fontFamily: 'Regular', height: 1.4),
             ),
 
-            // New section: Crack Details
-            const SizedBox(height: 16),
-            const Text(
-              'Crack Details',
-              style: TextStyle(fontFamily: 'Bold', fontSize: 16),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.black12),
-                color: Colors.white,
+            // Only show crack details if it's not "No Crack Detected"
+            if (crackType != 'No Crack Detected') ...[
+              // New section: Crack Details
+              const SizedBox(height: 16),
+              const Text(
+                'Crack Details',
+                style: TextStyle(fontFamily: 'Bold', fontSize: 16),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _getCategoryForCrackType(crackType),
-                    style: const TextStyle(
-                      fontFamily: 'Bold',
-                      fontSize: 14,
-                      color: Colors.black87,
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.black12),
+                  color: Colors.white,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _getCategoryForCrackType(crackType),
+                      style: const TextStyle(
+                        fontFamily: 'Bold',
+                        fontSize: 14,
+                        color: Colors.black87,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'What causes it:',
-                    style: TextStyle(
-                      fontFamily: 'Bold',
-                      fontSize: 13,
-                      color: Colors.black87,
+                    const SizedBox(height: 8),
+                    const Text(
+                      'What causes it:',
+                      style: TextStyle(
+                        fontFamily: 'Bold',
+                        fontSize: 13,
+                        color: Colors.black87,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _getCausesForCrackType(crackType),
-                    style: const TextStyle(
-                      fontFamily: 'Regular',
-                      fontSize: 13,
-                      height: 1.4,
-                      color: Colors.black87,
+                    const SizedBox(height: 4),
+                    Text(
+                      _getCausesForCrackType(crackType),
+                      style: const TextStyle(
+                        fontFamily: 'Regular',
+                        fontSize: 13,
+                        height: 1.4,
+                        color: Colors.black87,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Typical measurements:',
-                    style: TextStyle(
-                      fontFamily: 'Bold',
-                      fontSize: 13,
-                      color: Colors.black87,
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Typical measurements:',
+                      style: TextStyle(
+                        fontFamily: 'Bold',
+                        fontSize: 13,
+                        color: Colors.black87,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _getMeasurementsForCrackType(crackType),
-                    style: const TextStyle(
-                      fontFamily: 'Regular',
-                      fontSize: 13,
-                      height: 1.4,
-                      color: Colors.black87,
+                    const SizedBox(height: 4),
+                    Text(
+                      _getMeasurementsForCrackType(crackType),
+                      style: const TextStyle(
+                        fontFamily: 'Regular',
+                        fontSize: 13,
+                        height: 1.4,
+                        color: Colors.black87,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Safety level:',
-                    style: TextStyle(
-                      fontFamily: 'Bold',
-                      fontSize: 13,
-                      color: Colors.black87,
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Safety level:',
+                      style: TextStyle(
+                        fontFamily: 'Bold',
+                        fontSize: 13,
+                        color: Colors.black87,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _getDangerForCrackType(crackType),
-                    style: const TextStyle(
-                      fontFamily: 'Regular',
-                      fontSize: 13,
-                      height: 1.4,
-                      color: Colors.black87,
+                    const SizedBox(height: 4),
+                    Text(
+                      _getDangerForCrackType(crackType),
+                      style: const TextStyle(
+                        fontFamily: 'Regular',
+                        fontSize: 13,
+                        height: 1.4,
+                        color: Colors.black87,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
+            ],
 
             const SizedBox(height: 16),
             const Text(
@@ -323,26 +332,30 @@ class ResultScreen extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: 20),
-            ButtonWidget(
-              label: 'Simulate Earthquake',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => EarthquakeSimulationScreen(
-                      crackType: crackType,
-                      severity: severity,
+            // Only show earthquake simulation button if a crack was detected
+            if (crackType != 'No Crack Detected' &&
+                crackType != 'Processing Error') ...[
+              const SizedBox(height: 20),
+              ButtonWidget(
+                label: 'Simulate Earthquake',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => EarthquakeSimulationScreen(
+                        crackType: crackType,
+                        severity: severity,
+                      ),
                     ),
-                  ),
-                );
-              },
-              width: double.infinity,
-              height: 56,
-              color: primary,
-              textColor: Colors.white,
-              icon: const Icon(Icons.waves, color: Colors.white),
-            ),
+                  );
+                },
+                width: double.infinity,
+                height: 56,
+                color: primary,
+                textColor: Colors.white,
+                icon: const Icon(Icons.waves, color: Colors.white),
+              ),
+            ],
             const SizedBox(height: 12),
           ],
         ),

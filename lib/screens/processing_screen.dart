@@ -56,7 +56,13 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
         await _saveToHistory(result);
         _showCrackResult(result);
       } else {
-        _showErrorResult(result['causes'] as String);
+        // Check if it's a "no crack detected" case
+        final crackType = result['crackType'] as String?;
+        if (crackType == 'No Crack Detected') {
+          _showNoCrackResult(result);
+        } else {
+          _showErrorResult(result['causes'] as String);
+        }
       }
     } catch (e) {
       _showErrorResult('Error processing image: $e');
@@ -67,6 +73,12 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
     try {
       // Get current user ID (using email as ID for simplicity)
       final userId = _authService.currentUserEmail ?? 'anonymous';
+
+      // Don't save to history if no crack was detected
+      final crackType = result['crackType'] as String?;
+      if (crackType == 'No Crack Detected') {
+        return;
+      }
 
       // Save scan record to Firestore
       await _historyService.addScanRecord(
@@ -105,6 +117,31 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
             recommendations: _getRecommendations(result['danger'] as String),
             imagePath:
                 widget.imagePath, // Pass the image path to the result screen
+          ),
+        ),
+      );
+    }
+  }
+
+  void _showNoCrackResult(Map<String, dynamic> result) {
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ResultScreen(
+            crackType: result['crackType'] as String,
+            severity: 'SAFE',
+            confidence: result['confidence'] as double,
+            widthMm: 0.0,
+            lengthCm: 0.0,
+            analyzedAt: DateTime.now(),
+            summary: result['causes'] as String,
+            recommendations: const [
+              'No cracks were detected in the image.',
+              'Ensure the crack is clearly visible and well-lit when scanning.',
+              'Position the camera perpendicular to the surface for best results.',
+            ],
+            imagePath: widget.imagePath,
           ),
         ),
       );
