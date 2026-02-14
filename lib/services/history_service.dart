@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:path/path.dart' as path;
+import 'package:crackalyze/screens/location_selection_screen.dart';
 
 class HistoryService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -22,6 +23,8 @@ class HistoryService {
     required List<String> recommendations,
     required String imagePath,
     required DateTime analyzedAt,
+    CrackLocation? location,
+    Map<String, dynamic>? safetyAssessment,
   }) async {
     try {
       // Upload image to Firebase Storage
@@ -40,6 +43,9 @@ class HistoryService {
         'imageUrl': imageUrl,
         'analyzedAt': analyzedAt,
         'createdAt': FieldValue.serverTimestamp(),
+        'location': location?.displayName,
+        'safetyScore': safetyAssessment?['overallScore'],
+        'safetyLevel': safetyAssessment?['safetyLevel'],
       };
 
       // Add document to Firestore

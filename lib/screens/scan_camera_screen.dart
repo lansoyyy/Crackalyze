@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:crackalyze/utils/colors.dart';
 import 'package:crackalyze/screens/processing_screen.dart';
+import 'package:crackalyze/screens/location_selection_screen.dart';
 import 'package:camera/camera.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
@@ -8,7 +9,12 @@ import 'dart:io';
 import 'package:crackalyze/services/crack_detection_service.dart';
 
 class ScanCameraScreen extends StatefulWidget {
-  const ScanCameraScreen({super.key});
+  final CrackLocation location;
+
+  const ScanCameraScreen({
+    super.key,
+    required this.location,
+  });
 
   @override
   State<ScanCameraScreen> createState() => _ScanCameraScreenState();
@@ -97,7 +103,10 @@ class _ScanCameraScreenState extends State<ScanCameraScreen>
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => ProcessingScreen(imagePath: picture.path),
+            builder: (_) => ProcessingScreen(
+              imagePath: picture.path,
+              location: widget.location,
+            ),
           ),
         );
       }

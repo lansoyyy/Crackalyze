@@ -1,10 +1,7 @@
-// This is a test file for the ScanCameraScreen widget.
-// Since testing camera functionality requires hardware, we'll focus on widget structure.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:camera/camera.dart';
 import 'package:crackalyze/screens/scan_camera_screen.dart';
+import 'package:crackalyze/screens/location_selection_screen.dart';
 
 void main() {
   testWidgets('ScanCameraScreen displays correctly',
@@ -12,7 +9,7 @@ void main() {
     // Build our app and trigger a frame.
     await tester.pumpWidget(
       const MaterialApp(
-        home: ScanCameraScreen(),
+        home: ScanCameraScreen(location: CrackLocation.wall),
       ),
     );
 

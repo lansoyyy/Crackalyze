@@ -3,7 +3,7 @@ import 'package:crackalyze/screens/safety_levels_screen.dart';
 import 'package:crackalyze/screens/history_screen.dart';
 import 'package:crackalyze/screens/terms_screen.dart';
 import 'package:crackalyze/screens/contact_screen.dart';
-import 'package:crackalyze/screens/scan_camera_screen.dart';
+import 'package:crackalyze/screens/location_selection_screen.dart';
 import 'package:crackalyze/screens/login_screen.dart';
 import 'package:crackalyze/services/auth_service.dart';
 
@@ -169,7 +169,7 @@ class HomeScreen extends StatelessWidget {
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => const ScanCameraScreen(),
+                builder: (_) => const LocationSelectionScreen(),
               ),
             ),
           )
@@ -375,7 +375,7 @@ class HomeScreen extends StatelessWidget {
         onPressed: () => Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => const ScanCameraScreen(),
+            builder: (_) => const LocationSelectionScreen(),
           ),
         ),
         backgroundColor: brand,

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:crackalyze/utils/colors.dart';
 import 'package:crackalyze/screens/earthquake_simulation_screen.dart';
+import 'package:crackalyze/screens/location_selection_screen.dart';
 import 'package:crackalyze/widgets/button_widget.dart';
 
 class ResultScreen extends StatelessWidget {
@@ -15,6 +16,8 @@ class ResultScreen extends StatelessWidget {
   final String summary;
   final List<String> recommendations;
   final String? imagePath; // New parameter for image path
+  final CrackLocation? location; // Location of the crack
+  final Map<String, dynamic>? safetyAssessment; // Safety assessment data
 
   const ResultScreen({
     super.key,
@@ -27,6 +30,8 @@ class ResultScreen extends StatelessWidget {
     required this.summary,
     required this.recommendations,
     this.imagePath, // Optional image path
+    this.location, // Optional location
+    this.safetyAssessment, // Optional safety assessment
   });
 
   Color _levelColor(String level) {
@@ -301,6 +306,131 @@ class ResultScreen extends StatelessWidget {
                   ],
                 ),
               ),
+
+              // New section: Safety Assessment (Location-based)
+              if (location != null && safetyAssessment != null) ...[
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'Safety Assessment',
+                        style: TextStyle(fontFamily: 'Bold', fontSize: 16),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: _levelColor(
+                                safetyAssessment!['safetyLevel'] as String)
+                            .withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: _levelColor(
+                                  safetyAssessment!['safetyLevel'] as String)
+                              .withOpacity(0.3),
+                        ),
+                      ),
+                      child: Text(
+                        safetyAssessment!['safetyLevel'] as String,
+                        style: TextStyle(
+                          fontFamily: 'Bold',
+                          fontSize: 12,
+                          color: _levelColor(
+                              safetyAssessment!['safetyLevel'] as String),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Location: ${location!.displayName}',
+                  style: const TextStyle(
+                    fontFamily: 'Regular',
+                    fontSize: 13,
+                    color: Colors.black54,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.black12),
+                    color: Colors.white,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Location benchmark
+                      _buildBenchmarkRow(
+                        'Location',
+                        (safetyAssessment!['benchmarks']
+                                as Map<String, dynamic>)['location']!['value']
+                            as String,
+                        (safetyAssessment!['benchmarks'] as Map<String,
+                            dynamic>)['location']!['dangerScore'] as double,
+                        (safetyAssessment!['benchmarks'] as Map<String,
+                            dynamic>)['location']!['description'] as String,
+                        Icons.place,
+                      ),
+                      const Divider(height: 16),
+                      // Width benchmark
+                      _buildBenchmarkRow(
+                        'Width',
+                        (safetyAssessment!['benchmarks']
+                                as Map<String, dynamic>)['width']!['value']
+                            as String,
+                        (safetyAssessment!['benchmarks'] as Map<String,
+                            dynamic>)['width']!['dangerScore'] as double,
+                        (safetyAssessment!['benchmarks'] as Map<String,
+                            dynamic>)['width']!['description'] as String,
+                        Icons.fullscreen,
+                      ),
+                      const Divider(height: 16),
+                      // Length benchmark
+                      _buildBenchmarkRow(
+                        'Length',
+                        (safetyAssessment!['benchmarks']
+                                as Map<String, dynamic>)['length']!['value']
+                            as String,
+                        (safetyAssessment!['benchmarks'] as Map<String,
+                            dynamic>)['length']!['dangerScore'] as double,
+                        (safetyAssessment!['benchmarks'] as Map<String,
+                            dynamic>)['length']!['description'] as String,
+                        Icons.straighten,
+                      ),
+                      const Divider(height: 16),
+                      // Orientation benchmark
+                      _buildBenchmarkRow(
+                        'Orientation',
+                        (safetyAssessment!['benchmarks'] as Map<String,
+                            dynamic>)['orientation']!['value'] as String,
+                        (safetyAssessment!['benchmarks'] as Map<String,
+                            dynamic>)['orientation']!['dangerScore'] as double,
+                        (safetyAssessment!['benchmarks'] as Map<String,
+                            dynamic>)['orientation']!['description'] as String,
+                        Icons.arrow_right_alt,
+                      ),
+                      const Divider(height: 16),
+                      // Depth benchmark
+                      _buildBenchmarkRow(
+                        'Depth',
+                        (safetyAssessment!['benchmarks']
+                                as Map<String, dynamic>)['depth']!['value']
+                            as String,
+                        (safetyAssessment!['benchmarks'] as Map<String,
+                            dynamic>)['depth']!['dangerScore'] as double,
+                        (safetyAssessment!['benchmarks'] as Map<String,
+                            dynamic>)['depth']!['description'] as String,
+                        Icons.layers,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ],
 
             const SizedBox(height: 16),
@@ -366,6 +496,94 @@ class ResultScreen extends StatelessWidget {
   String _formatTime(DateTime dt) {
     return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}  '
         '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+  }
+
+  Widget _buildBenchmarkRow(
+    String title,
+    String value,
+    double dangerScore,
+    String description,
+    IconData icon,
+  ) {
+    // Determine color based on danger score
+    Color scoreColor;
+    if (dangerScore >= 0.7) {
+      scoreColor = const Color(0xFFC62828); // Red - dangerous
+    } else if (dangerScore >= 0.4) {
+      scoreColor = const Color(0xFFF57C00); // Orange - moderate
+    } else {
+      scoreColor = const Color(0xFF2E7D32); // Green - safe
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: scoreColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 20, color: scoreColor),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontFamily: 'Bold',
+                      fontSize: 13,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: scoreColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      '${(dangerScore * 100).toStringAsFixed(0)}%',
+                      style: TextStyle(
+                        fontFamily: 'Bold',
+                        fontSize: 11,
+                        color: scoreColor,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontFamily: 'Regular',
+                  fontSize: 12,
+                  color: Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                description,
+                style: const TextStyle(
+                  fontFamily: 'Regular',
+                  fontSize: 11,
+                  color: Colors.black45,
+                  height: 1.3,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
   String _getCategoryForCrackType(String crackType) {

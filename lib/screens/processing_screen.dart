@@ -4,14 +4,21 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:crackalyze/utils/colors.dart';
 import 'package:crackalyze/screens/result_screen.dart';
+import 'package:crackalyze/screens/location_selection_screen.dart';
 import 'package:crackalyze/services/crack_detection_service.dart';
+import 'package:crackalyze/services/safety_assessment_service.dart';
 import 'package:crackalyze/services/history_service.dart';
 import 'package:crackalyze/services/auth_service.dart';
 
 class ProcessingScreen extends StatefulWidget {
   final String imagePath;
+  final CrackLocation location;
 
-  const ProcessingScreen({super.key, required this.imagePath});
+  const ProcessingScreen({
+    super.key,
+    required this.imagePath,
+    required this.location,
+  });
 
   @override
   State<ProcessingScreen> createState() => _ProcessingScreenState();
@@ -52,9 +59,24 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
       final result = await _detectionService.analyzeImage(imageFile);
 
       if (result['success'] as bool) {
+        // Calculate safety assessment for crack results
+        final widthMm = (result['characteristics']['width'] as double?) ?? 0.5;
+        final lengthCm =
+            ((result['characteristics']['length'] as double?) ?? 50.0) / 10;
+        final orientation =
+            result['characteristics']['orientation'] as String? ?? 'network';
+
+        final safetyAssessment = SafetyAssessmentService.assessSafety(
+          location: widget.location,
+          widthMm: widthMm,
+          lengthCm: lengthCm,
+          orientation: orientation,
+          crackType: result['crackType'] as String,
+        );
+
         // Save to history before showing result
-        await _saveToHistory(result);
-        _showCrackResult(result);
+        await _saveToHistory(result, safetyAssessment);
+        _showCrackResult(result, safetyAssessment);
       } else {
         // Check if it's a "no crack detected" case
         final crackType = result['crackType'] as String?;
@@ -69,7 +91,10 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
     }
   }
 
-  Future<void> _saveToHistory(Map<String, dynamic> result) async {
+  Future<void> _saveToHistory(
+    Map<String, dynamic> result,
+    Map<String, dynamic> safetyAssessment,
+  ) async {
     try {
       // Get current user ID (using email as ID for simplicity)
       final userId = _authService.currentUserEmail ?? 'anonymous';
@@ -80,19 +105,21 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
         return;
       }
 
-      // Save scan record to Firestore
+      // Save scan record to Firestore with location and safety data
       await _historyService.addScanRecord(
         userId: userId,
         crackType: result['crackType'] as String,
-        severity: _mapDangerToSeverity(result['danger'] as String),
+        severity: safetyAssessment['safetyLevel'] as String,
         confidence: result['confidence'] as double,
         widthMm: (result['characteristics']['width'] as double?) ?? 0.5,
         lengthCm:
             ((result['characteristics']['length'] as double?) ?? 50.0) / 10,
         summary: result['causes'] as String,
-        recommendations: _getRecommendations(result['danger'] as String),
+        recommendations: safetyAssessment['recommendations'] as List<String>,
         imagePath: widget.imagePath,
         analyzedAt: DateTime.now(),
+        location: widget.location,
+        safetyAssessment: safetyAssessment,
       );
     } catch (e) {
       // Log error but don't stop the flow
@@ -100,23 +127,32 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
     }
   }
 
-  void _showCrackResult(Map<String, dynamic> result) {
+  void _showCrackResult(
+    Map<String, dynamic> result,
+    Map<String, dynamic> safetyAssessment,
+  ) {
+    // Calculate safety assessment based on benchmarks
+    final widthMm = (result['characteristics']['width'] as double?) ?? 0.5;
+    final lengthCm =
+        ((result['characteristics']['length'] as double?) ?? 50.0) / 10;
+
     if (mounted) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (_) => ResultScreen(
             crackType: result['crackType'] as String,
-            severity: _mapDangerToSeverity(result['danger'] as String),
+            severity: safetyAssessment['safetyLevel'] as String,
             confidence: result['confidence'] as double,
-            widthMm: (result['characteristics']['width'] as double?) ?? 0.5,
-            lengthCm:
-                ((result['characteristics']['length'] as double?) ?? 50.0) / 10,
+            widthMm: widthMm,
+            lengthCm: lengthCm,
             analyzedAt: DateTime.now(),
             summary: result['causes'] as String,
-            recommendations: _getRecommendations(result['danger'] as String),
-            imagePath:
-                widget.imagePath, // Pass the image path to the result screen
+            recommendations:
+                safetyAssessment['recommendations'] as List<String>,
+            imagePath: widget.imagePath,
+            location: widget.location,
+            safetyAssessment: safetyAssessment,
           ),
         ),
       );
@@ -166,61 +202,10 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
               'Ensure the crack is clearly visible in the image.',
               'Make sure the camera lens is clean.',
             ],
-            imagePath:
-                widget.imagePath, // Pass the image path even for error cases
+            imagePath: widget.imagePath,
           ),
         ),
       );
-    }
-  }
-
-  String _mapDangerToSeverity(String danger) {
-    // Map the danger level from crack data to severity levels used in the app
-    switch (danger.toLowerCase()) {
-      case 'not dangerous':
-        return 'SAFE';
-      case 'does not impose serious danger, but may be a sign of instability of the infrastructure. more concerning if there are uneven floors or water seepage.':
-        return 'MODERATE';
-      case 'dangerous':
-        return 'DANGEROUS';
-      case 'very dangerous, as this is a sign that the concrete failed to carry a specific weight which lead to cracks. this may mean that the maximum capacity the concrete can handle has lessened as damage has occurred within the structure.':
-        return 'DANGEROUS'; // Very dangerous maps to DANGEROUS severity
-      default:
-        return 'MODERATE';
-    }
-  }
-
-  List<String> _getRecommendations(String danger) {
-    switch (danger.toLowerCase()) {
-      case 'not dangerous':
-        return [
-          'This crack is not dangerous but monitor it periodically.',
-          'Consider cosmetic repair for visual improvement.',
-        ];
-      case 'does not impose serious danger, but may be a sign of instability of the infrastructure. more concerning if there are uneven floors or water seepage.':
-        return [
-          'Monitor crack width weekly for changes (>0.5mm increase is notable).',
-          'Inspect for moisture and address drainage near foundations.',
-          'Consult a structural professional if widening or displacement occurs.',
-        ];
-      case 'dangerous':
-        return [
-          'Immediate professional assessment is recommended.',
-          'Avoid placing additional loads on the affected structure.',
-          'Consider structural reinforcement or repair measures.',
-        ];
-      case 'very dangerous, as this is a sign that the concrete failed to carry a specific weight which lead to cracks. this may mean that the maximum capacity the concrete can handle has lessened as damage has occurred within the structure.':
-        return [
-          'Immediate professional assessment is required.',
-          'Evacuate the area if necessary.',
-          'Do not place any additional loads on the structure.',
-          'Contact a structural engineer immediately.',
-        ];
-      default:
-        return [
-          'Monitor the crack for changes.',
-          'Consult a professional if you notice any changes.',
-        ];
     }
   }
 
