@@ -3,10 +3,6 @@ import 'package:crackalyze/utils/colors.dart';
 import 'package:crackalyze/screens/processing_screen.dart';
 import 'package:crackalyze/screens/location_selection_screen.dart';
 import 'package:camera/camera.dart';
-import 'package:path/path.dart' as path;
-import 'package:path_provider/path_provider.dart';
-import 'dart:io';
-import 'package:crackalyze/services/crack_detection_service.dart';
 
 class ScanCameraScreen extends StatefulWidget {
   final CrackLocation location;
@@ -98,14 +94,18 @@ class _ScanCameraScreenState extends State<ScanCameraScreen>
       // Take a picture
       final XFile picture = await _controller!.takePicture();
 
-      // Navigate to processing screen with the captured image
+      // Ask about rebar visibility
       if (mounted) {
+        final rebarVisible = await _showRebarDialog();
+
+        // Navigate to processing screen with the captured image
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => ProcessingScreen(
               imagePath: picture.path,
               location: widget.location,
+              rebarVisible: rebarVisible ?? false,
             ),
           ),
         );
@@ -126,6 +126,87 @@ class _ScanCameraScreenState extends State<ScanCameraScreen>
         _isProcessing = false;
       });
     }
+  }
+
+  Future<bool?> _showRebarDialog() async {
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Rebar Visibility',
+          style: TextStyle(
+            fontFamily: 'Bold',
+            fontSize: 18,
+            color: Colors.black87,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Is the rebar visible through the crack?',
+              style: TextStyle(
+                fontFamily: 'Regular',
+                fontSize: 14,
+                color: Colors.black54,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.orange.withOpacity(0.3)),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.info_outline, color: Colors.orange, size: 20),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'This helps determine the severity of the crack.',
+                      style: TextStyle(
+                        fontFamily: 'Regular',
+                        fontSize: 12,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text(
+              'No',
+              style: TextStyle(
+                fontFamily: 'Bold',
+                fontSize: 14,
+                color: Colors.black54,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text(
+              'Yes',
+              style: TextStyle(
+                fontFamily: 'Bold',
+                fontSize: 14,
+                color: Color(0xFF8B0C17),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

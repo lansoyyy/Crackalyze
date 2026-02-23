@@ -3,9 +3,9 @@ import 'package:crackalyze/screens/location_selection_screen.dart';
 /// Safety assessment service that evaluates crack danger based on 5 benchmarks:
 /// 1. Location (most to least dangerous): column > beam > slab > wall
 /// 2. Width: >5mm = dangerous, <5mm = not as dangerous
-/// 3. Shape/Orientation (most to least dangerous): diagonal > horizontal > vertical
-/// 4. Length: >30cm = dangerous
-/// 5. Depth: Rebar visible (slab >20mm, beam/column/wall >40mm)
+/// 3. Length: >30cm = dangerous
+/// 4. Depth: Rebar visible (Yes/No)
+/// 5. Shape/Orientation (most to least dangerous): diagonal > horizontal > vertical
 class SafetyAssessmentService {
   /// Location danger scores (higher = more dangerous)
   static const Map<CrackLocation, double> _locationScores = {
@@ -35,21 +35,13 @@ class SafetyAssessmentService {
   /// Length thresholds
   static const double _dangerousLengthThreshold = 30.0; // cm
 
-  /// Depth thresholds by location (mm)
-  static const Map<CrackLocation, double> _depthThresholds = {
-    CrackLocation.slab: 20.0, // Slab: >20mm depth = rebar visible (dangerous)
-    CrackLocation.beam: 40.0, // Beam: >40mm depth = rebar visible
-    CrackLocation.column: 40.0, // Column: >40mm depth = rebar visible
-    CrackLocation.wall: 40.0, // Wall: >40mm depth = rebar visible
-  };
-
   /// Assess the safety level based on all benchmarks
   static Map<String, dynamic> assessSafety({
     required CrackLocation location,
     required double widthMm,
     required double lengthCm,
     required String orientation,
-    double? depthMm,
+    bool? rebarVisible,
     String? crackType,
   }) {
     // Calculate individual benchmark scores
@@ -57,21 +49,21 @@ class SafetyAssessmentService {
     final widthScore = _calculateWidthScore(widthMm);
     final lengthScore = _calculateLengthScore(lengthCm);
     final orientationScore = _calculateOrientationScore(orientation);
-    final depthScore = _calculateDepthScore(location, depthMm);
+    final depthScore = _calculateDepthScore(location, rebarVisible);
 
     // Calculate overall danger score (weighted average)
-    // Weights reflect importance of each factor
-    const locationWeight = 0.25;
-    const widthWeight = 0.25;
-    const lengthWeight = 0.20;
-    const orientationWeight = 0.15;
-    const depthWeight = 0.15;
+    // Weights reflect importance of each factor (updated per client request)
+    const locationWeight = 0.15; // 15%
+    const widthWeight = 0.25; // 25%
+    const lengthWeight = 0.25; // 25%
+    const depthWeight = 0.25; // 25%
+    const orientationWeight = 0.10; // 10%
 
     final overallScore = (locationScore * locationWeight) +
         (widthScore * widthWeight) +
         (lengthScore * lengthWeight) +
-        (orientationScore * orientationWeight) +
-        (depthScore * depthWeight);
+        (depthScore * depthWeight) +
+        (orientationScore * orientationWeight);
 
     // Determine safety level
     final safetyLevel = _determineSafetyLevel(overallScore);
@@ -104,12 +96,16 @@ class SafetyAssessmentService {
         'orientation': {
           'value': orientation,
           'dangerScore': orientationScore,
-          'description': _getOrientationDescription(orientation, orientationScore),
+          'description':
+              _getOrientationDescription(orientation, orientationScore),
         },
         'depth': {
-          'value': depthMm != null ? '${depthMm.toStringAsFixed(1)} mm' : 'Unknown',
+          'value': rebarVisible == true
+              ? 'Yes'
+              : (rebarVisible == false ? 'No' : 'Unknown'),
           'dangerScore': depthScore,
-          'description': _getDepthDescription(location, depthMm, depthScore),
+          'description':
+              _getDepthDescription(location, rebarVisible, depthScore),
         },
       },
       'recommendations': _generateRecommendations(
@@ -118,8 +114,9 @@ class SafetyAssessmentService {
         widthMm,
         lengthCm,
         orientation,
-        depthMm,
+        rebarVisible,
       ),
+      'safetyAdvice': _getSafetyAdvice(safetyLevel),
     };
 
     return assessment;
@@ -135,7 +132,8 @@ class SafetyAssessmentService {
     if (widthMm >= _dangerousWidthThreshold) {
       // Width >= 5mm is dangerous
       // Scale from 0.6 to 1.0 based on how much over threshold
-      return 0.6 + ((widthMm - _dangerousWidthThreshold) / 10.0).clamp(0.0, 0.4);
+      return 0.6 +
+          ((widthMm - _dangerousWidthThreshold) / 10.0).clamp(0.0, 0.4);
     } else {
       // Width < 5mm is not as dangerous
       // Scale from 0.1 to 0.5
@@ -148,7 +146,8 @@ class SafetyAssessmentService {
     if (lengthCm >= _dangerousLengthThreshold) {
       // Length >= 30cm is dangerous
       // Scale from 0.6 to 1.0
-      return 0.6 + ((lengthCm - _dangerousLengthThreshold) / 50.0).clamp(0.0, 0.4);
+      return 0.6 +
+          ((lengthCm - _dangerousLengthThreshold) / 50.0).clamp(0.0, 0.4);
     } else {
       // Length < 30cm is less dangerous
       // Scale from 0.1 to 0.5
@@ -162,20 +161,19 @@ class SafetyAssessmentService {
     return _orientationScores[normalizedOrientation] ?? 0.5;
   }
 
-  /// Calculate depth danger score
-  static double _calculateDepthScore(CrackLocation location, double? depthMm) {
-    if (depthMm == null) {
-      return 0.5; // Unknown depth - neutral score
+  /// Calculate depth danger score (based on rebar visibility)
+  static double _calculateDepthScore(
+      CrackLocation location, bool? rebarVisible) {
+    if (rebarVisible == null) {
+      return 0.5; // Unknown - neutral score
     }
 
-    final threshold = _depthThresholds[location] ?? 40.0;
-
-    if (depthMm >= threshold) {
-      // Depth exceeds threshold - rebar may be visible (dangerous)
-      return 0.8 + ((depthMm - threshold) / 20.0).clamp(0.0, 0.2);
+    if (rebarVisible) {
+      // Rebar visible - dangerous
+      return 0.9;
     } else {
-      // Depth below threshold - rebar not visible (less dangerous)
-      return 0.1 + (depthMm / threshold * 0.5);
+      // Rebar not visible - less dangerous
+      return 0.2;
     }
   }
 
@@ -238,17 +236,15 @@ class SafetyAssessmentService {
 
   /// Get depth description
   static String _getDepthDescription(
-      CrackLocation location, double? depthMm, double score) {
-    final threshold = _depthThresholds[location] ?? 40.0;
-
-    if (depthMm == null) {
-      return 'Depth unknown - rebar visibility cannot be determined';
+      CrackLocation location, bool? rebarVisible, double score) {
+    if (rebarVisible == null) {
+      return 'Rebar visibility unknown';
     }
 
-    if (depthMm >= threshold) {
-      return 'Depth ≥${threshold}mm - rebar may be visible (critical)';
+    if (rebarVisible) {
+      return 'Rebar visible - critical (requires immediate attention)';
     } else {
-      return 'Depth <${threshold}mm - rebar not visible (less critical)';
+      return 'Rebar not visible - less critical';
     }
   }
 
@@ -259,45 +255,66 @@ class SafetyAssessmentService {
     double widthMm,
     double lengthCm,
     String orientation,
-    double? depthMm,
+    bool? rebarVisible,
   ) {
     final recommendations = <String>[];
 
     if (safetyLevel == 'DANGEROUS') {
-      recommendations.add('IMMEDIATE ACTION REQUIRED: Contact a structural engineer');
-      recommendations.add('Avoid placing loads on the affected ${location.displayName.toLowerCase()}');
-      
+      recommendations
+          .add('IMMEDIATE ACTION REQUIRED: Contact a structural engineer');
+      recommendations.add(
+          'Avoid placing loads on the affected ${location.displayName.toLowerCase()}');
+
       if (widthMm >= _dangerousWidthThreshold) {
-        recommendations.add('Crack width (${widthMm.toStringAsFixed(1)}mm) exceeds safe threshold');
+        recommendations.add(
+            'Crack width (${widthMm.toStringAsFixed(1)}mm) exceeds safe threshold');
       }
       if (lengthCm >= _dangerousLengthThreshold) {
-        recommendations.add('Crack length (${lengthCm.toStringAsFixed(0)}cm) exceeds safe threshold');
+        recommendations.add(
+            'Crack length (${lengthCm.toStringAsFixed(0)}cm) exceeds safe threshold');
       }
       if (orientation.toLowerCase().contains('diagonal')) {
-        recommendations.add('Diagonal cracks indicate potential structural shear failure');
+        recommendations
+            .add('Diagonal cracks indicate potential structural shear failure');
       }
     } else if (safetyLevel == 'MODERATE') {
       recommendations.add('Monitor the crack weekly for any changes');
       recommendations.add('Document crack measurements for comparison');
-      
+
       if (location == CrackLocation.column || location == CrackLocation.beam) {
-        recommendations.add('Given the critical location (${location.displayName}), consider professional assessment');
+        recommendations.add(
+            'Given the critical location (${location.displayName}), consider professional assessment');
       }
       if (widthMm >= _dangerousWidthThreshold * 0.8) {
-        recommendations.add('Crack width approaching dangerous threshold - monitor closely');
+        recommendations.add(
+            'Crack width approaching dangerous threshold - monitor closely');
       }
     } else {
       recommendations.add('Continue routine monitoring of the crack');
-      recommendations.add('This appears to be a minor crack based on current measurements');
+      recommendations.add(
+          'This appears to be a minor crack based on current measurements');
     }
 
     // Depth-specific recommendations
-    final threshold = _depthThresholds[location] ?? 40.0;
-    if (depthMm != null && depthMm >= threshold) {
-      recommendations.add('Significant depth detected - potential rebar exposure requires investigation');
+    if (rebarVisible == true) {
+      recommendations.add('Rebar visible - potential structural damage');
     }
 
     return recommendations;
+  }
+
+  /// Get brief safety advice based on safety level
+  static String _getSafetyAdvice(String safetyLevel) {
+    switch (safetyLevel.toUpperCase()) {
+      case 'DANGEROUS':
+        return 'Seek immediate action for repair';
+      case 'MODERATE':
+        return 'Seek further advice from an engineer';
+      case 'SAFE':
+        return 'May only need cosmetic repair, seek further advice from an engineer if concerned';
+      default:
+        return 'Consult a professional for assessment';
+    }
   }
 
   /// Get severity color based on safety level

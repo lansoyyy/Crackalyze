@@ -47,6 +47,193 @@ extension CrackLocationExtension on CrackLocation {
         return Icons.wallpaper;
     }
   }
+
+  Color get color {
+    switch (this) {
+      case CrackLocation.column:
+        return const Color(0xFFE53935);
+      case CrackLocation.beam:
+        return const Color(0xFFFB8C00);
+      case CrackLocation.slab:
+        return const Color(0xFF43A047);
+      case CrackLocation.wall:
+        return const Color(0xFF1E88E5);
+    }
+  }
+
+  Widget get visualRepresentation {
+    switch (this) {
+      case CrackLocation.column:
+        return _ColumnVisual();
+      case CrackLocation.beam:
+        return _BeamVisual();
+      case CrackLocation.slab:
+        return _SlabVisual();
+      case CrackLocation.wall:
+        return _WallVisual();
+    }
+  }
+}
+
+// Visual representation widgets for each location type
+class _ColumnVisual extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      size: const Size(60, 80),
+      painter: _ColumnPainter(),
+    );
+  }
+}
+
+class _ColumnPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFFE53935)
+      ..style = PaintingStyle.fill;
+
+    // Draw column shape
+    final rect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(size.width * 0.25, 0, size.width * 0.5, size.height),
+      const Radius.circular(4),
+    );
+    canvas.drawRRect(rect, paint);
+
+    // Add crack representation
+    final crackPaint = Paint()
+      ..color = Colors.white
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+    canvas.drawLine(
+      Offset(size.width * 0.4, size.height * 0.2),
+      Offset(size.width * 0.6, size.height * 0.6),
+      crackPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _BeamVisual extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      size: const Size(80, 60),
+      painter: _BeamPainter(),
+    );
+  }
+}
+
+class _BeamPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFFFB8C00)
+      ..style = PaintingStyle.fill;
+
+    // Draw beam shape
+    final rect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, size.height * 0.25, size.width, size.height * 0.5),
+      const Radius.circular(4),
+    );
+    canvas.drawRRect(rect, paint);
+
+    // Add crack representation
+    final crackPaint = Paint()
+      ..color = Colors.white
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+    canvas.drawLine(
+      Offset(size.width * 0.2, size.height * 0.5),
+      Offset(size.width * 0.5, size.height * 0.4),
+      crackPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _SlabVisual extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      size: const Size(80, 60),
+      painter: _SlabPainter(),
+    );
+  }
+}
+
+class _SlabPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF43A047)
+      ..style = PaintingStyle.fill;
+
+    // Draw slab shape (top view)
+    final rect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      const Radius.circular(4),
+    );
+    canvas.drawRRect(rect, paint);
+
+    // Add crack representation
+    final crackPaint = Paint()
+      ..color = Colors.white
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+    canvas.drawLine(
+      Offset(size.width * 0.3, size.height * 0.3),
+      Offset(size.width * 0.7, size.height * 0.7),
+      crackPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _WallVisual extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      size: const Size(80, 60),
+      painter: _WallPainter(),
+    );
+  }
+}
+
+class _WallPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF1E88E5)
+      ..style = PaintingStyle.fill;
+
+    // Draw wall shape
+    final rect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      const Radius.circular(4),
+    );
+    canvas.drawRRect(rect, paint);
+
+    // Add crack representation
+    final crackPaint = Paint()
+      ..color = Colors.white
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+    canvas.drawLine(
+      Offset(size.width * 0.5, size.height * 0.1),
+      Offset(size.width * 0.5, size.height * 0.9),
+      crackPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class LocationSelectionScreen extends StatefulWidget {
@@ -122,7 +309,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                 crossAxisCount: 2,
                 mainAxisSpacing: 16,
                 crossAxisSpacing: 16,
-                childAspectRatio: 1.0,
+                childAspectRatio: 0.85,
                 children: CrackLocation.values.map((location) {
                   final isSelected = _selectedLocation == location;
                   return InkWell(
@@ -139,17 +326,20 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                           color: isSelected ? brand : Colors.black12,
                           width: isSelected ? 2 : 1,
                         ),
-                        color: isSelected
-                            ? brand.withOpacity(0.05)
-                            : Colors.white,
+                        color:
+                            isSelected ? brand.withOpacity(0.05) : Colors.white,
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            location.icon,
-                            size: 48,
-                            color: isSelected ? brand : Colors.black54,
+                          // Visual representation of the location
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: location.color.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: location.visualRepresentation,
                           ),
                           const SizedBox(height: 12),
                           Text(
@@ -162,14 +352,13 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                           ),
                           const SizedBox(height: 4),
                           Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 12),
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
                             child: Text(
                               location.description,
                               textAlign: TextAlign.center,
                               style: const TextStyle(
                                 fontFamily: 'Regular',
-                                fontSize: 12,
+                                fontSize: 11,
                                 color: Colors.black54,
                               ),
                             ),
