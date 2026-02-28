@@ -41,7 +41,7 @@ class SafetyAssessmentService {
     required double widthMm,
     required double lengthCm,
     required String orientation,
-    bool? rebarVisible,
+    bool? depthVisible,
     String? crackType,
   }) {
     // Calculate individual benchmark scores
@@ -49,14 +49,14 @@ class SafetyAssessmentService {
     final widthScore = _calculateWidthScore(widthMm);
     final lengthScore = _calculateLengthScore(lengthCm);
     final orientationScore = _calculateOrientationScore(orientation);
-    final depthScore = _calculateDepthScore(location, rebarVisible);
+    final depthScore = _calculateDepthScore(location, depthVisible);
 
     // Calculate overall danger score (weighted average)
     // Weights reflect importance of each factor (updated per client request)
     const locationWeight = 0.15; // 15%
-    const widthWeight = 0.25; // 25%
-    const lengthWeight = 0.25; // 25%
-    const depthWeight = 0.25; // 25%
+    const widthWeight = 0.25; // 25% (L)
+    const lengthWeight = 0.25; // 25% (W)
+    const depthWeight = 0.25; // 25% (D)
     const orientationWeight = 0.10; // 10%
 
     final overallScore = (locationScore * locationWeight) +
@@ -100,12 +100,12 @@ class SafetyAssessmentService {
               _getOrientationDescription(orientation, orientationScore),
         },
         'depth': {
-          'value': rebarVisible == true
+          'value': depthVisible == true
               ? 'Yes'
-              : (rebarVisible == false ? 'No' : 'Unknown'),
+              : (depthVisible == false ? 'No' : 'Unknown'),
           'dangerScore': depthScore,
           'description':
-              _getDepthDescription(location, rebarVisible, depthScore),
+              _getDepthDescription(location, depthVisible, depthScore),
         },
       },
       'recommendations': _generateRecommendations(
@@ -114,7 +114,7 @@ class SafetyAssessmentService {
         widthMm,
         lengthCm,
         orientation,
-        rebarVisible,
+        depthVisible,
       ),
       'safetyAdvice': _getSafetyAdvice(safetyLevel),
     };
@@ -161,18 +161,18 @@ class SafetyAssessmentService {
     return _orientationScores[normalizedOrientation] ?? 0.5;
   }
 
-  /// Calculate depth danger score (based on rebar visibility)
+  /// Calculate depth danger score (based on depth visibility)
   static double _calculateDepthScore(
-      CrackLocation location, bool? rebarVisible) {
-    if (rebarVisible == null) {
+      CrackLocation location, bool? depthVisible) {
+    if (depthVisible == null) {
       return 0.5; // Unknown - neutral score
     }
 
-    if (rebarVisible) {
-      // Rebar visible - dangerous
+    if (depthVisible) {
+      // Depth visible - dangerous
       return 0.9;
     } else {
-      // Rebar not visible - less dangerous
+      // Depth not visible - less dangerous
       return 0.2;
     }
   }
@@ -236,15 +236,15 @@ class SafetyAssessmentService {
 
   /// Get depth description
   static String _getDepthDescription(
-      CrackLocation location, bool? rebarVisible, double score) {
-    if (rebarVisible == null) {
-      return 'Rebar visibility unknown';
+      CrackLocation location, bool? depthVisible, double score) {
+    if (depthVisible == null) {
+      return 'Depth visibility unknown';
     }
 
-    if (rebarVisible) {
-      return 'Rebar visible - critical (requires immediate attention)';
+    if (depthVisible) {
+      return 'Depth visible - critical (requires immediate attention)';
     } else {
-      return 'Rebar not visible - less critical';
+      return 'Depth not visible - less critical';
     }
   }
 
@@ -255,7 +255,7 @@ class SafetyAssessmentService {
     double widthMm,
     double lengthCm,
     String orientation,
-    bool? rebarVisible,
+    bool? depthVisible,
   ) {
     final recommendations = <String>[];
 
@@ -296,8 +296,8 @@ class SafetyAssessmentService {
     }
 
     // Depth-specific recommendations
-    if (rebarVisible == true) {
-      recommendations.add('Rebar visible - potential structural damage');
+    if (depthVisible == true) {
+      recommendations.add('Depth is visible - potential structural damage');
     }
 
     return recommendations;

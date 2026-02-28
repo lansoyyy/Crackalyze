@@ -96,7 +96,7 @@ class _ScanCameraScreenState extends State<ScanCameraScreen>
 
       // Ask about rebar visibility
       if (mounted) {
-        final rebarVisible = await _showRebarDialog();
+        final depthVisible = await _showDepthDialog();
 
         // Navigate to processing screen with the captured image
         Navigator.push(
@@ -105,7 +105,7 @@ class _ScanCameraScreenState extends State<ScanCameraScreen>
             builder: (_) => ProcessingScreen(
               imagePath: picture.path,
               location: widget.location,
-              rebarVisible: rebarVisible ?? false,
+              depthVisible: depthVisible ?? false,
             ),
           ),
         );
@@ -128,7 +128,7 @@ class _ScanCameraScreenState extends State<ScanCameraScreen>
     }
   }
 
-  Future<bool?> _showRebarDialog() async {
+  Future<bool?> _showDepthDialog() async {
     return showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -136,7 +136,7 @@ class _ScanCameraScreenState extends State<ScanCameraScreen>
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text(
-          'Rebar Visibility',
+          'Depth Visibility',
           style: TextStyle(
             fontFamily: 'Bold',
             fontSize: 18,
@@ -147,7 +147,7 @@ class _ScanCameraScreenState extends State<ScanCameraScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text(
-              'Is the rebar visible through the crack?',
+              'Is the depth of the crack visible?',
               style: TextStyle(
                 fontFamily: 'Regular',
                 fontSize: 14,

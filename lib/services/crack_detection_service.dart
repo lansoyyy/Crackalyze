@@ -8,7 +8,7 @@ class CrackDetectionService {
   static const List<Map<String, dynamic>> crackTypes = [
     {
       'name': 'Flexural Cracks',
-      'category': 'Structural Concrete Cracks',
+      'category': 'Structural',
       'causes':
           'These cracks occur due to excessive bending or tensile stress. Concrete materials are stronger under compression rather than tension. These are typically found in tension zones or the bottom of a beam. These cracks are generally in a diagonal or vertical pattern of the member, and is perpendicular to the direction of the load.',
       'measurements': '?',
@@ -24,7 +24,7 @@ class CrackDetectionService {
     },
     {
       'name': 'Shear Cracks',
-      'category': 'Structural Concrete Cracks',
+      'category': 'Structural',
       'causes':
           'These cracks happen when shear capacity is exceeded. This happens when sections of concrete slide past each other in a way that pulls them apart. These are rare occurrences and have a diagonal pattern.',
       'measurements': '?',
@@ -40,7 +40,7 @@ class CrackDetectionService {
     },
     {
       'name': 'Cracking Due to Overloading',
-      'category': 'Structural Concrete Cracks',
+      'category': 'Structural',
       'causes':
           'When the weight inside an infrastructure exceeds the designated limit. This causes stress to the concrete leading to structural failure.',
       'measurements': '0.1mm - 0.3mm',
@@ -57,7 +57,7 @@ class CrackDetectionService {
     },
     {
       'name': 'Foundation Settlement Cracks',
-      'category': 'Structural Concrete Cracks',
+      'category': 'Structural',
       'causes':
           'Movement of the ground (either sinking or compression) over time affects the concrete, leading to cracks with a stair-like pattern.',
       'measurements': '?',
@@ -74,7 +74,7 @@ class CrackDetectionService {
     },
     {
       'name': 'Internal Reinforcement Corrosion Cracks',
-      'category': 'Structural Concrete Cracks',
+      'category': 'Structural',
       'causes':
           'The corrosion of steel within the concrete wall. Steel bars are said to grow 8 times larger after corrosion, caused by chloride ion ingress or carbonation. These cracks are parallel to the steel bar and take a long time to appear.',
       'measurements': '0.1mm - 0.4mm (width), ≥0.015mm (depth)',
@@ -91,7 +91,7 @@ class CrackDetectionService {
     },
     {
       'name': 'Plastic Shrinkage Crack',
-      'category': 'Non-structural Cracks',
+      'category': 'Non-structural',
       'causes':
           'Rapid evaporation of water from the concrete before settlement, leading water loss and eventually shrinkage of concrete. This leads to a surface divided into piece due to the shrinkage rather than a smooth finish.',
       'measurements': '3mm (width), 50mm - 100mm (depth)',
@@ -108,7 +108,7 @@ class CrackDetectionService {
     },
     {
       'name': 'Crazing Cracks',
-      'category': 'Non-structural Cracks',
+      'category': 'Non-structural',
       'causes':
           'Uneven rapid drying of the surface of concrete, leading to the pulling away of the surface.',
       'measurements':
@@ -126,7 +126,7 @@ class CrackDetectionService {
     },
     {
       'name': 'Hairline Cracks',
-      'category': 'Non-structural Cracks',
+      'category': 'Non-structural',
       'causes':
           'When concrete settles during the process of curing. These are thin cracks that may go very deep in depth.',
       'measurements': 'Less than 1mm to 1.5mm (width)',
@@ -1039,7 +1039,7 @@ class CrackDetectionService {
     }
 
     // Further boost if connectivity is good (cracks should be continuous)
-    if (connectivity != null && connectivity > 0.6) {
+    if (connectivity > 0.6) {
       adjustedConfidence = min(1.0, adjustedConfidence * 1.1);
     }
 

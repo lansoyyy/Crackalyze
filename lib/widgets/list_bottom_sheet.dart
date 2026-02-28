@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../widgets/text_widget.dart';
 
 class ListBottomSheet extends StatelessWidget {
-  const ListBottomSheet({Key? key}) : super(key: key);
+  const ListBottomSheet({super.key});
 
   @override
   Widget build(BuildContext context) {

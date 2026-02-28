@@ -141,7 +141,7 @@ class _ButtonWidgetState extends State<ButtonWidget>
                 onTapUp: widget.isLoading! ? null : _handleTapUp,
                 onTapCancel: widget.isLoading! ? null : _handleTapCancel,
                 borderRadius: BorderRadius.circular(widget.radius!),
-                child: Container(
+                child: SizedBox(
                   width: double.infinity,
                   height: double.infinity,
                   child: Center(

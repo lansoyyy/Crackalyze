@@ -13,13 +13,13 @@ import 'package:crackalyze/services/auth_service.dart';
 class ProcessingScreen extends StatefulWidget {
   final String imagePath;
   final CrackLocation location;
-  final bool rebarVisible;
+  final bool depthVisible;
 
   const ProcessingScreen({
     super.key,
     required this.imagePath,
     required this.location,
-    this.rebarVisible = false,
+    this.depthVisible = false,
   });
 
   @override
@@ -73,7 +73,7 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
           widthMm: widthMm,
           lengthCm: lengthCm,
           orientation: orientation,
-          rebarVisible: widget.rebarVisible,
+          depthVisible: widget.depthVisible,
           crackType: result['crackType'] as String,
         );
 

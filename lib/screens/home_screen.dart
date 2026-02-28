@@ -47,94 +47,25 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<Map<String, dynamic>> crackTypes = [
-      // Structural Concrete Cracks
       {
-        'category': 'Structural Concrete Cracks',
-        'name': 'Flexural Cracks',
+        'category': 'Structural',
+        'name': 'Structural Crack',
         'causes':
-            'These cracks occur due to excessive bending or tensile stress. Concrete materials are stronger under compression rather than tension. These are typically found in tension zones or the bottom of a beam. These cracks are generally in a diagonal or vertical pattern of the member, and is perpendicular to the direction of the load.',
-        'measurements': '?',
-        'danger': 'Dangerous',
-        'icon': Icons.horizontal_rule,
-      },
-      {
-        'category': 'Structural Concrete Cracks',
-        'name': 'Shear Cracks',
-        'causes':
-            'These cracks happen when shear capacity is exceeded. This happens when sections of concrete slide past each other in a way that pulls them apart. These are rare occurrences and have a diagonal pattern.',
-        'measurements': '?',
-        'danger': 'Dangerous',
-        'icon': Icons.call_split,
-      },
-      {
-        'category': 'Structural Concrete Cracks',
-        'name': 'Internal Microcracking',
-        'causes': 'Not specified',
-        'measurements': '?',
-        'danger': 'Not specified',
-        'icon': Icons.grain,
-      },
-      {
-        'category': 'Structural Concrete Cracks',
-        'name': 'Cracking Due to Overloading',
-        'causes':
-            'When the weight inside an infrastructure exceeds the designated limit. This causes stress to the concrete leading to structural failure.',
-        'measurements': '0.1mm - 0.3mm',
+            'These cracks occur due to excessive stress, overloading, foundation settlement, or internal deterioration. They affect the load-bearing capacity of the building and signify a potential structural failure.',
+        'measurements': 'Typically wider and deeper, often growing over time.',
         'danger':
-            'Very dangerous, as this is a sign that the concrete failed to carry a specific weight which lead to cracks. This may mean that the maximum capacity the concrete can handle has lessened as damage has occurred within the structure.',
+            'Dangerous. This means that the structural integrity of the concrete is compromised. Seek immediate action for repair.',
         'icon': Icons.warning,
       },
       {
-        'category': 'Structural Concrete Cracks',
-        'name': 'Foundation Settlement Cracks',
+        'category': 'Non-structural',
+        'name': 'Non-structural Crack',
         'causes':
-            'Movement of the ground (either sinking or compression) over time affects the concrete, leading to cracks with a stair-like pattern.',
-        'measurements': '?',
+            'Typically caused by shrinkage, temperature changes, or natural aging of the concrete surface. These do not affect the load-bearing capacity of the building.',
+        'measurements': 'Usually thin, hairline cracks less than a few millimeters wide.',
         'danger':
-            'Does not impose serious danger, but may be a sign of instability of the infrastructure. More concerning if there are uneven floors or water seepage.',
-        'icon': Icons.foundation,
-      },
-      {
-        'category': 'Structural Concrete Cracks',
-        'name': 'Internal Reinforcement Corrosion Cracks',
-        'causes':
-            'The corrosion of steel within the concrete wall. Steel bars are said to grow 8 times larger after corrosion, caused by chloride ion ingress or carbonation. These cracks are parallel to the steel bar and take a long time to appear.',
-        'measurements': '0.1mm - 0.4mm (width), ≥0.015mm (depth)',
-        'danger':
-            'Internal deterioration of materials may signify a weaker base, which may lead to structural failure.',
-        'icon': Icons.coronavirus,
-      },
-      // Non-structural Cracks
-      {
-        'category': 'Non-structural Cracks',
-        'name': 'Plastic Shrinkage Crack',
-        'causes':
-            'Rapid evaporation of water from the concrete before settlement, leading water loss and eventually shrinkage of concrete. This leads to a surface divided into piece due to the shrinkage rather than a smooth finish.',
-        'measurements': '3mm (width), 50mm - 100mm (depth)',
-        'danger':
-            'Not dangerous, more of an issue with visual appearance and durability of the material.',
-        'icon': Icons.opacity,
-      },
-      {
-        'category': 'Non-structural Cracks',
-        'name': 'Crazing Cracks',
-        'causes':
-            'Uneven rapid drying of the surface of concrete, leading to the pulling away of the surface.',
-        'measurements':
-            '10mm - 40mm (width of a single hexagonal area), <3mm (depth)',
-        'danger':
-            'Not dangerous, as this is a crack only existing at the surface of structure, more a visual issue.',
-        'icon': Icons.grid_on,
-      },
-      {
-        'category': 'Non-structural Cracks',
-        'name': 'Hairline Cracks',
-        'causes':
-            'When concrete settles during the process of curing. These are thin cracks that may go very deep in depth.',
-        'measurements': 'Less than 1mm to 1.5mm (width)',
-        'danger':
-            'Can lead to more serious cracks once the concrete has dried. Constant monitoring over time is important. If the crack starts to grow, this may be a sign of a growing issue within the stability of the building.',
-        'icon': Icons.line_weight,
+            'Safe. May only need cosmetic repair. Seek further advice from an engineer if concerned.',
+        'icon': Icons.check_circle_outline,
       },
     ];
 

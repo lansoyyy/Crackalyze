@@ -3,7 +3,7 @@ import '../../widgets/text_widget.dart';
 import '../../utils/colors.dart';
 
 class CreateListBottomSheet extends StatefulWidget {
-  const CreateListBottomSheet({Key? key}) : super(key: key);
+  const CreateListBottomSheet({super.key});
 
   @override
   State<CreateListBottomSheet> createState() => _CreateListBottomSheetState();
