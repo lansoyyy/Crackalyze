@@ -2,24 +2,29 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:image/image.dart' as img;
 import 'package:crackalyze/utils/colors.dart';
 import 'package:crackalyze/screens/result_screen.dart';
 import 'package:crackalyze/screens/location_selection_screen.dart';
+import 'package:crackalyze/screens/scan_camera_screen.dart';
 import 'package:crackalyze/services/crack_detection_service.dart';
 import 'package:crackalyze/services/safety_assessment_service.dart';
 import 'package:crackalyze/services/history_service.dart';
 import 'package:crackalyze/services/auth_service.dart';
+import 'package:crackalyze/services/calibration_service.dart';
 
 class ProcessingScreen extends StatefulWidget {
   final String imagePath;
   final CrackLocation location;
   final bool depthVisible;
+  final CalibrationData? calibrationData;
 
   const ProcessingScreen({
     super.key,
     required this.imagePath,
     required this.location,
     this.depthVisible = false,
+    this.calibrationData,
   });
 
   @override
@@ -31,6 +36,7 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
   late CrackDetectionService _detectionService;
   late HistoryService _historyService;
   late AuthService _authService;
+  late CalibrationService _calibrationService;
 
   @override
   void initState() {
@@ -38,6 +44,7 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
     _detectionService = CrackDetectionService();
     _historyService = HistoryService();
     _authService = AuthService();
+    _calibrationService = CalibrationService();
     // Start processing after a short delay to show the processing screen
     _timer = Timer(const Duration(milliseconds: 500), _processImage);
   }
@@ -46,6 +53,44 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
   void dispose() {
     _timer?.cancel();
     super.dispose();
+  }
+
+  /// Perform calibration using the reference object in the image
+  Future<void> _performCalibration(File imageFile) async {
+    try {
+      // Read the image
+      final bytes = await imageFile.readAsBytes();
+      final image = img.decodeImage(bytes);
+
+      if (image == null) {
+        print('Failed to decode image for calibration');
+        return;
+      }
+
+      // Get the reference size from calibration data
+      final referenceSizeMm = widget.calibrationData?.referenceSizeMm ?? 25.0;
+
+      // Perform calibration
+      final calibrationResult = _calibrationService.calibrateFromImage(
+        image,
+        referenceSizeMm,
+      );
+
+      if (calibrationResult['success'] as bool) {
+        print(
+            'Calibration successful: ${calibrationResult['pixelsPerMm']} pixels/mm');
+      } else {
+        print('Calibration failed: ${calibrationResult['error']}');
+        // Fallback to manual calibration if auto-detection fails
+        _calibrationService.setManualCalibration(
+          10.0, // Default fallback: 10 pixels = 1 mm
+          widget.calibrationData?.referenceObject ?? 'Default',
+        );
+      }
+    } catch (e) {
+      print('Error during calibration: $e');
+      // Continue without calibration on error
+    }
   }
 
   void _processImage() async {
@@ -57,14 +102,35 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
         return;
       }
 
+      // Perform calibration if reference object is provided
+      if (widget.calibrationData?.useCalibration == true) {
+        await _performCalibration(imageFile);
+      }
+
       // Analyze the image for cracks
       final result = await _detectionService.analyzeImage(imageFile);
 
       if (result['success'] as bool) {
-        // Calculate safety assessment for crack results
-        final widthMm = (result['characteristics']['width'] as double?) ?? 0.5;
-        final lengthCm =
-            ((result['characteristics']['length'] as double?) ?? 50.0) / 10;
+        // Get the crack length in pixels
+        final lengthPixels =
+            (result['characteristics']['length'] as double?) ?? 50.0;
+        final widthPixels =
+            (result['characteristics']['width'] as double?) ?? 0.5;
+
+        // Convert to real-world units using calibration or fallback
+        double lengthCm;
+        double widthMm;
+
+        if (_calibrationService.isCalibrated) {
+          // Use calibrated conversion
+          lengthCm = _calibrationService.pixelsToCm(lengthPixels);
+          widthMm = _calibrationService.pixelsToMm(widthPixels);
+        } else {
+          // Use fallback conversion (original method)
+          lengthCm = lengthPixels / 10;
+          widthMm = widthPixels;
+        }
+
         final orientation =
             result['characteristics']['orientation'] as String? ?? 'network';
 
@@ -108,15 +174,34 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
         return;
       }
 
+      // Get the crack measurements in pixels
+      final lengthPixels =
+          (result['characteristics']['length'] as double?) ?? 50.0;
+      final widthPixels =
+          (result['characteristics']['width'] as double?) ?? 0.5;
+
+      // Convert to real-world units using calibration or fallback
+      double lengthCm;
+      double widthMm;
+
+      if (_calibrationService.isCalibrated) {
+        // Use calibrated conversion
+        lengthCm = _calibrationService.pixelsToCm(lengthPixels);
+        widthMm = _calibrationService.pixelsToMm(widthPixels);
+      } else {
+        // Use fallback conversion (original method)
+        lengthCm = lengthPixels / 10;
+        widthMm = widthPixels;
+      }
+
       // Save scan record to Firestore with location and safety data
       await _historyService.addScanRecord(
         userId: userId,
         crackType: result['crackType'] as String,
         severity: safetyAssessment['safetyLevel'] as String,
         confidence: result['confidence'] as double,
-        widthMm: (result['characteristics']['width'] as double?) ?? 0.5,
-        lengthCm:
-            ((result['characteristics']['length'] as double?) ?? 50.0) / 10,
+        widthMm: widthMm,
+        lengthCm: lengthCm,
         summary: result['causes'] as String,
         recommendations: safetyAssessment['recommendations'] as List<String>,
         imagePath: widget.imagePath,
@@ -134,10 +219,24 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
     Map<String, dynamic> result,
     Map<String, dynamic> safetyAssessment,
   ) {
-    // Calculate safety assessment based on benchmarks
-    final widthMm = (result['characteristics']['width'] as double?) ?? 0.5;
-    final lengthCm =
-        ((result['characteristics']['length'] as double?) ?? 50.0) / 10;
+    // Get the crack length in pixels
+    final lengthPixels =
+        (result['characteristics']['length'] as double?) ?? 50.0;
+    final widthPixels = (result['characteristics']['width'] as double?) ?? 0.5;
+
+    // Convert to real-world units using calibration or fallback
+    double lengthCm;
+    double widthMm;
+
+    if (_calibrationService.isCalibrated) {
+      // Use calibrated conversion
+      lengthCm = _calibrationService.pixelsToCm(lengthPixels);
+      widthMm = _calibrationService.pixelsToMm(widthPixels);
+    } else {
+      // Use fallback conversion (original method)
+      lengthCm = lengthPixels / 10;
+      widthMm = widthPixels;
+    }
 
     if (mounted) {
       Navigator.pushReplacement(

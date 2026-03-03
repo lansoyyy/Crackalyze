@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:crackalyze/utils/colors.dart';
 import 'package:crackalyze/screens/processing_screen.dart';
 import 'package:crackalyze/screens/location_selection_screen.dart';
+import 'package:crackalyze/services/calibration_service.dart';
 import 'package:camera/camera.dart';
 
 class ScanCameraScreen extends StatefulWidget {
@@ -94,9 +95,10 @@ class _ScanCameraScreenState extends State<ScanCameraScreen>
       // Take a picture
       final XFile picture = await _controller!.takePicture();
 
-      // Ask about rebar visibility
+      // Ask about rebar visibility and reference object
       if (mounted) {
         final depthVisible = await _showDepthDialog();
+        final calibrationData = await _showCalibrationDialog();
 
         // Navigate to processing screen with the captured image
         Navigator.push(
@@ -106,6 +108,7 @@ class _ScanCameraScreenState extends State<ScanCameraScreen>
               imagePath: picture.path,
               location: widget.location,
               depthVisible: depthVisible ?? false,
+              calibrationData: calibrationData,
             ),
           ),
         );
@@ -206,6 +209,14 @@ class _ScanCameraScreenState extends State<ScanCameraScreen>
           ),
         ],
       ),
+    );
+  }
+
+  Future<CalibrationData?> _showCalibrationDialog() async {
+    return showDialog<CalibrationData>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => _CalibrationDialog(),
     );
   }
 
@@ -324,6 +335,247 @@ class _ScanCameraScreenState extends State<ScanCameraScreen>
           )
         ],
       ),
+    );
+  }
+}
+
+/// Data class for calibration information
+class CalibrationData {
+  final String referenceObject;
+  final double referenceSizeMm;
+  final bool useCalibration;
+
+  CalibrationData({
+    required this.referenceObject,
+    required this.referenceSizeMm,
+    required this.useCalibration,
+  });
+}
+
+/// Dialog for selecting reference object for calibration
+class _CalibrationDialog extends StatefulWidget {
+  @override
+  State<_CalibrationDialog> createState() => _CalibrationDialogState();
+}
+
+class _CalibrationDialogState extends State<_CalibrationDialog> {
+  String? _selectedReference;
+  double _customSize = 25.0;
+  bool _useCalibration = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: const Text(
+        'Measurement Calibration',
+        style: TextStyle(
+          fontFamily: 'Bold',
+          fontSize: 18,
+          color: Colors.black87,
+        ),
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Toggle calibration
+            SwitchListTile(
+              title: const Text(
+                'Use Reference Object',
+                style: TextStyle(
+                  fontFamily: 'Medium',
+                  fontSize: 14,
+                  color: Colors.black87,
+                ),
+              ),
+              subtitle: const Text(
+                'Place a reference object near the crack for accurate measurement',
+                style: TextStyle(
+                  fontFamily: 'Regular',
+                  fontSize: 12,
+                  color: Colors.black54,
+                ),
+              ),
+              value: _useCalibration,
+              onChanged: (value) {
+                setState(() {
+                  _useCalibration = value;
+                });
+              },
+              activeColor: primary,
+            ),
+
+            if (_useCalibration) ...[
+              const SizedBox(height: 8),
+              const Text(
+                'Select Reference Object:',
+                style: TextStyle(
+                  fontFamily: 'Medium',
+                  fontSize: 14,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // Reference object dropdown
+              DropdownButtonFormField<String>(
+                value: _selectedReference,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                ),
+                items: CalibrationService.referenceObjects.entries.map((entry) {
+                  return DropdownMenuItem<String>(
+                    value: entry.key,
+                    child: Text(
+                      entry.key,
+                      style: const TextStyle(
+                        fontFamily: 'Regular',
+                        fontSize: 13,
+                      ),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedReference = value;
+                  });
+                },
+              ),
+
+              if (_selectedReference == 'Custom (mm)') ...[
+                const SizedBox(height: 12),
+                const Text(
+                  'Enter Reference Size (mm):',
+                  style: TextStyle(
+                    fontFamily: 'Medium',
+                    fontSize: 14,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    hintText: 'e.g., 25',
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      _customSize = double.tryParse(value) ?? 25.0;
+                    });
+                  },
+                ),
+              ],
+
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: const [
+                        Icon(Icons.info_outline, color: Colors.blue, size: 18),
+                        SizedBox(width: 8),
+                        Text(
+                          'Tips for accurate measurement:',
+                          style: TextStyle(
+                            fontFamily: 'Medium',
+                            fontSize: 12,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      '• Place the reference object close to the crack\n'
+                      '• Ensure good lighting\n'
+                      '• Keep the camera perpendicular to the surface\n'
+                      '• Common objects: coins, credit cards, rulers',
+                      style: TextStyle(
+                        fontFamily: 'Regular',
+                        fontSize: 11,
+                        color: Colors.black54,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(null),
+          child: const Text(
+            'Skip',
+            style: TextStyle(
+              fontFamily: 'Bold',
+              fontSize: 14,
+              color: Colors.black54,
+            ),
+          ),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            if (_useCalibration && _selectedReference == null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Please select a reference object'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+              return;
+            }
+
+            final referenceSize = _selectedReference == 'Custom (mm)'
+                ? _customSize
+                : CalibrationService.referenceObjects[_selectedReference!] ??
+                    25.0;
+
+            Navigator.of(context).pop(
+              CalibrationData(
+                referenceObject: _selectedReference ?? 'None',
+                referenceSizeMm: referenceSize,
+                useCalibration: _useCalibration,
+              ),
+            );
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: primary,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          child: const Text(
+            'Continue',
+            style: TextStyle(
+              fontFamily: 'Bold',
+              fontSize: 14,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
