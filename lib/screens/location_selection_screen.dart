@@ -64,14 +64,34 @@ extension CrackLocationExtension on CrackLocation {
   Widget get visualRepresentation {
     switch (this) {
       case CrackLocation.column:
-        return Image.asset('assets/images/column_location.png', height: 60, width: 60);
+        return _LocationText('Column', const Color(0xFFE53935));
       case CrackLocation.beam:
-        return Image.asset('assets/images/beam_location.png', height: 60, width: 60);
+        return _LocationText('Beam', const Color(0xFFFB8C00));
       case CrackLocation.slab:
-        return Image.asset('assets/images/slab_location.png', height: 60, width: 60);
+        return _LocationText('Slab', const Color(0xFF43A047));
       case CrackLocation.wall:
-        return Image.asset('assets/images/wall_location.png', height: 60, width: 60);
+        return _LocationText('Wall', const Color(0xFF1E88E5));
     }
+  }
+
+  Widget _LocationText(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color, width: 2),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontFamily: 'Bold',
+          fontSize: 18,
+          color: color,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
   }
 }
 

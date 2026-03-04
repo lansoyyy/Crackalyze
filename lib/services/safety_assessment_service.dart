@@ -1,11 +1,10 @@
 import 'package:crackalyze/screens/location_selection_screen.dart';
 
-/// Safety assessment service that evaluates crack danger based on 5 benchmarks:
+/// Safety assessment service that evaluates crack danger based on 4 benchmarks:
 /// 1. Location (most to least dangerous): column > beam > slab > wall
 /// 2. Width: >5mm = dangerous, <5mm = not as dangerous
 /// 3. Length: >30cm = dangerous
-/// 4. Depth: Rebar visible (Yes/No)
-/// 5. Shape/Orientation (most to least dangerous): diagonal > horizontal > vertical
+/// 4. Shape/Orientation (most to least dangerous): diagonal > horizontal > vertical
 class SafetyAssessmentService {
   /// Location danger scores (higher = more dangerous)
   static const Map<CrackLocation, double> _locationScores = {
@@ -49,20 +48,17 @@ class SafetyAssessmentService {
     final widthScore = _calculateWidthScore(widthMm);
     final lengthScore = _calculateLengthScore(lengthCm);
     final orientationScore = _calculateOrientationScore(orientation);
-    final depthScore = _calculateDepthScore(location, depthVisible);
 
     // Calculate overall danger score (weighted average)
-    // Weights reflect importance of each factor (updated per client request)
-    const locationWeight = 0.15; // 15%
-    const widthWeight = 0.25; // 25% (L)
-    const lengthWeight = 0.25; // 25% (W)
-    const depthWeight = 0.25; // 25% (D)
-    const orientationWeight = 0.10; // 10%
+    // Weights reflect importance of each factor (scaled to 100% after removing depth)
+    const locationWeight = 0.20; // 20% (scaled from 15%)
+    const widthWeight = 0.333; // 33.3% (scaled from 25%)
+    const lengthWeight = 0.333; // 33.3% (scaled from 25%)
+    const orientationWeight = 0.134; // 13.4% (scaled from 10%)
 
     final overallScore = (locationScore * locationWeight) +
         (widthScore * widthWeight) +
         (lengthScore * lengthWeight) +
-        (depthScore * depthWeight) +
         (orientationScore * orientationWeight);
 
     // Determine safety level
@@ -76,7 +72,6 @@ class SafetyAssessmentService {
       'widthScore': widthScore,
       'lengthScore': lengthScore,
       'orientationScore': orientationScore,
-      'depthScore': depthScore,
       'benchmarks': {
         'location': {
           'value': location.displayName,
@@ -99,14 +94,6 @@ class SafetyAssessmentService {
           'description':
               _getOrientationDescription(orientation, orientationScore),
         },
-        'depth': {
-          'value': depthVisible == true
-              ? 'Yes'
-              : (depthVisible == false ? 'No' : 'Unknown'),
-          'dangerScore': depthScore,
-          'description':
-              _getDepthDescription(location, depthVisible, depthScore),
-        },
       },
       'recommendations': _generateRecommendations(
         safetyLevel,
@@ -114,7 +101,6 @@ class SafetyAssessmentService {
         widthMm,
         lengthCm,
         orientation,
-        depthVisible,
       ),
       'safetyAdvice': _getSafetyAdvice(safetyLevel),
     };
@@ -159,22 +145,6 @@ class SafetyAssessmentService {
   static double _calculateOrientationScore(String orientation) {
     final normalizedOrientation = orientation.toLowerCase();
     return _orientationScores[normalizedOrientation] ?? 0.5;
-  }
-
-  /// Calculate depth danger score (based on depth visibility)
-  static double _calculateDepthScore(
-      CrackLocation location, bool? depthVisible) {
-    if (depthVisible == null) {
-      return 0.5; // Unknown - neutral score
-    }
-
-    if (depthVisible) {
-      // Depth visible - dangerous
-      return 0.9;
-    } else {
-      // Depth not visible - less dangerous
-      return 0.2;
-    }
   }
 
   /// Determine overall safety level based on score
@@ -234,20 +204,6 @@ class SafetyAssessmentService {
     }
   }
 
-  /// Get depth description
-  static String _getDepthDescription(
-      CrackLocation location, bool? depthVisible, double score) {
-    if (depthVisible == null) {
-      return 'Depth visibility unknown';
-    }
-
-    if (depthVisible) {
-      return 'Depth visible - critical (requires immediate attention)';
-    } else {
-      return 'Depth not visible - less critical';
-    }
-  }
-
   /// Generate recommendations based on safety assessment
   static List<String> _generateRecommendations(
     String safetyLevel,
@@ -255,7 +211,6 @@ class SafetyAssessmentService {
     double widthMm,
     double lengthCm,
     String orientation,
-    bool? depthVisible,
   ) {
     final recommendations = <String>[];
 
@@ -293,11 +248,6 @@ class SafetyAssessmentService {
       recommendations.add('Continue routine monitoring of the crack');
       recommendations.add(
           'This appears to be a minor crack based on current measurements');
-    }
-
-    // Depth-specific recommendations
-    if (depthVisible == true) {
-      recommendations.add('Depth is visible - potential structural damage');
     }
 
     return recommendations;

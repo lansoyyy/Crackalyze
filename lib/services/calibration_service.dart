@@ -11,7 +11,7 @@ class CalibrationService {
     'Nickel Coin (21.21mm)': 21.21,
     'Penny Coin (19.05mm)': 19.05,
     'Credit Card (85.6mm)': 85.6,
-    'Standard Ruler (100mm)': 100.0,
+    'Standard Ruler (300mm)': 300.0,
     'Custom (mm)': 0.0,
   };
 

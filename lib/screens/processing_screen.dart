@@ -16,14 +16,12 @@ import 'package:crackalyze/services/calibration_service.dart';
 class ProcessingScreen extends StatefulWidget {
   final String imagePath;
   final CrackLocation location;
-  final bool depthVisible;
   final CalibrationData? calibrationData;
 
   const ProcessingScreen({
     super.key,
     required this.imagePath,
     required this.location,
-    this.depthVisible = false,
     this.calibrationData,
   });
 
@@ -139,7 +137,6 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
           widthMm: widthMm,
           lengthCm: lengthCm,
           orientation: orientation,
-          depthVisible: widget.depthVisible,
           crackType: result['crackType'] as String,
         );
 
